@@ -72,8 +72,13 @@ function App() {
           stats={stats}
           geocodeAddress={geocodeAddress}
         />
+        {/* 키 및 도메인 진단 정보 */}
+        <div style={{ padding: '10px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.2)', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+          <div>도메인: {window.location.hostname}</div>
+          <div>API 키: {import.meta.env.VITE_VWORLD_API_KEY ? '설정됨' : '미설정(확인필요)'}</div>
+        </div>
         {/* 국립목포대학교 카피라이트 */}
-        <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
+        <div style={{ padding: '15px 20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '0' }}>
           © 국립목포대학교 조경학과 조경표현연구실
         </div>
       </aside>
