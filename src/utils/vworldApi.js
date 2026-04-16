@@ -1,11 +1,9 @@
-import axios from 'axios';
-
-// 현재 환경 확인
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
 // Vworld API 실제 엔드포인트
 const ADDR_ENDPOINT = 'https://api.vworld.kr/req/address';
 const DATA_ENDPOINT = 'https://api.vworld.kr/req/data';
+
+// 현재 환경 확인
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 // 로컬일 때만 프록시 경로 사용, 배포 환경에서는 직접 호출
 const ADDR_BASE = isLocal ? '/vworld-addr' : ADDR_ENDPOINT;
@@ -18,7 +16,7 @@ const API_KEY = (import.meta.env.VITE_VWORLD_API_KEY || '').trim();
  * 주소를 위경도 좌표로 변환 (Geocoding)
  */
 export const geocodeAddress = async (address) => {
-  if (!API_KEY) throw new Error('Vworld API 키가 설정되지 않았습니다. Vercel 환경 변수를 확인해주세요.');
+  if (!API_KEY) throw new Error('API 키가 설정되지 않았습니다.');
 
   const params = new URLSearchParams({
     key: API_KEY,
@@ -31,28 +29,28 @@ export const geocodeAddress = async (address) => {
     crs: 'epsg:4326',
   });
 
-  try {
-    const url = `${ADDR_BASE}?${params.toString()}`;
-    console.log('Requesting URL:', url); // 디버깅용
-    
-    const response = await axios.get(url);
+  const url = `${ADDR_BASE}?${params.toString()}`;
+  console.log('Fetching:', url);
 
-    if (response.data.response && response.data.response.status === 'OK') {
-      const { x, y } = response.data.response.result.point;
-      return {
-        lat: parseFloat(y),
-        lng: parseFloat(x),
-        address: address
-      };
-    } else {
-      const errorMsg = response.data.response?.error?.text || '인증 오류가 발생했습니다. 브이월드 센터에 등록한 도메인과 현재 접속 주소가 일치하는지 확인하세요.';
-      throw new Error(errorMsg);
-    }
-  } catch (err) {
-    if (err.response?.status === 404) {
-      throw new Error('404 에러: API 경로를 찾을 수 없습니다. (브이월드 도메인 제한 또는 Vercel 설정 문제)');
-    }
-    throw err;
+  // Axios 대신 표준 Fetch API 사용 (배포 환경 안정성 확보)
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP 에러! 상태코드: ${response.status} (브이월드 도메인 인증 오류일 가능성이 높습니다)`);
+  }
+
+  const data = await response.json();
+
+  if (data.response && data.response.status === 'OK') {
+    const { x, y } = data.response.result.point;
+    return {
+      lat: parseFloat(y),
+      lng: parseFloat(x),
+      address: address
+    };
+  } else {
+    const msg = data.response?.error?.text || '인증 실패: 브이월드에 등록한 주소와 현재 접속 주소가 일치하는지 확인하세요.';
+    throw new Error(msg);
   }
 };
 
@@ -80,10 +78,11 @@ export const fetchBuildingData = async (lat, lng, radiusKm = 0.5) => {
   });
 
   const url = `${DATA_BASE}?${params.toString()}`;
-  const response = await axios.get(url);
+  const response = await fetch(url);
+  const data = await response.json();
 
-  if (response.data.GMLFeatureCollection) {
-    return response.data.GMLFeatureCollection.featureMember.map(fm => {
+  if (data.GMLFeatureCollection) {
+    return data.GMLFeatureCollection.featureMember.map(fm => {
       const feature = Object.values(fm)[0];
       return {
         type: 'Feature',
