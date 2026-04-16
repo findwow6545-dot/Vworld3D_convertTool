@@ -1,0 +1,167 @@
+import { useRef, useEffect } from 'react';
+
+const RADIUS_MIN = 0.1;
+const RADIUS_MAX = 3.0;
+const RADIUS_STEP = 0.1;
+
+export default function SearchControl({
+  coord,
+  radius,
+  setRadius,
+  onAddressSelect,
+  onFetch,
+  onDownload,
+  isCollecting,
+  logs,
+  stats,
+  geocodeAddress,
+}) {
+  const logEndRef = useRef(null);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  // 주소 검색 실행 (Daum Postcode 팝업)
+  const handleOpenPostcode = () => {
+    if (!window.daum || !window.daum.Postcode) {
+      alert('주소 검색 서비스를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    new window.daum.Postcode({
+      oncomplete: async (data) => {
+        const fullAddress = data.roadAddress || data.address;
+        try {
+          const result = await geocodeAddress(fullAddress);
+          onAddressSelect(result); 
+        } catch (err) {
+          console.error('주소 변환 오류:', err);
+          alert(`주소 정보를 가져오지 못했습니다: ${err.message}`);
+        }
+      },
+    }).open();
+  };
+
+  const address = coord?.address || '';
+  const sliderPct = ((radius - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN)) * 100;
+  const sliderBg = `linear-gradient(to right, var(--color-accent) ${sliderPct}%, rgba(255,255,255,0.1) ${sliderPct}%)`;
+
+  return (
+    <div className="search-control">
+      <div className="sidebar-header">
+        <div className="badge">VWORLD 3D TOOL</div>
+        <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
+        <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
+      </div>
+
+      {/* ── 주소 설정 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">📍 주소 설정</div>
+        <div
+          className={`address-input-box ${address ? 'selected' : ''}`}
+          onClick={handleOpenPostcode}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleOpenPostcode()}
+        >
+          <span className="address-icon">🏢</span>
+          <div className="address-text">
+            {address ? (
+              <>
+                <div className="address-main">{address}</div>
+                {coord && (
+                  <div className="address-sub">
+                    {coord.lat.toFixed(5)}°N &nbsp;{coord.lng.toFixed(5)}°E
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="address-placeholder">클릭하여 주소 검색</div>
+            )}
+          </div>
+          <span style={{ color: 'var(--color-text-faint)', fontSize: '12px' }}>▼</span>
+        </div>
+        <button className="btn-search-address" onClick={handleOpenPostcode}>
+          🔍 주소 검색 (다음 API)
+        </button>
+      </div>
+
+      {/* ── 반경 설정 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">📐 추출 반경</div>
+        <div className="slider-container">
+          <div className="slider-header">
+            <span className="slider-title">반경 (Radius)</span>
+            <div className="slider-value">{radius.toFixed(1)}<span>km</span></div>
+          </div>
+          <input
+            type="range"
+            className="range-input"
+            min={RADIUS_MIN}
+            max={RADIUS_MAX}
+            step={RADIUS_STEP}
+            value={radius}
+            onChange={(e) => setRadius(parseFloat(e.target.value))}
+            style={{ background: sliderBg }}
+          />
+        </div>
+      </div>
+
+      {/* ── 좌표 정보 ── */}
+      {coord && (
+        <div className="sidebar-section">
+          <div className="section-label">🌐 좌표 정보</div>
+          <div className="coord-card">
+            <div className="coord-grid">
+              <div className="coord-item">
+                <div className="coord-item-label">LATITUDE (위도)</div>
+                <div className="coord-item-value">{coord.lat.toFixed(6)}°</div>
+              </div>
+              <div className="coord-item">
+                <div className="coord-item-label">LONGITUDE (경도)</div>
+                <div className="coord-item-value">{coord.lng.toFixed(6)}°</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 실행 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">🚀 실행</div>
+        <button
+          className="btn-primary"
+          onClick={onFetch}
+          disabled={isCollecting || !coord}
+        >
+          {isCollecting ? (
+            <><div className="spinner" /> 📡 데이터 수집 중...</>
+          ) : (
+            <>🏗️ 건물 데이터 수집</>
+          )}
+        </button>
+        {stats.total > 0 && (
+          <button className="btn-download" onClick={onDownload} disabled={isCollecting} style={{ marginTop: '10px' }}>
+            ⬇️ OBJ 파일 다운로드
+          </button>
+        )}
+      </div>
+
+      {/* ── 로그 ── */}
+      <div className="sidebar-section" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="section-label">📝 진행 로그</div>
+        <div className="log-container">
+          {logs.map((log) => (
+            <div key={log.id} className={`log-item ${log.type}`}>
+              <span className="log-icon">{log.icon}</span>
+              <div className="log-content">
+                <span className="log-time">{log.time}</span>
+                <span className="log-message">{log.message}</span>
+              </div>
+            </div>
+          ))}
+          <div ref={logEndRef} />
+        </div>
+      </div>
+    </div>
+  );
+}
