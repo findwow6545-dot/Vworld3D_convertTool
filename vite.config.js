@@ -7,25 +7,26 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    css: {
-      devSourcemap: true,
+    build: {
+      chunkSizeWarningLimit: 2000,
+    },
+    // 빌드 시 Cesium을 외부 전역 변수로 인식하도록 설정 (중요: 빌드 중단 방지)
+    optimizeDeps: {
+      exclude: ['cesium']
     },
     server: {
       port: 3000,
       proxy: {
-        // 주소 검색 프록시
         '/vworld-addr': {
           target: 'https://api.vworld.kr/req/address',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/vworld-addr/, ''),
         },
-        // 데이터 수집 프록시
         '/vworld-data': {
           target: 'https://api.vworld.kr/req/data',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/vworld-data/, ''),
         },
-        // WMTS 지도 프록시
         '/vworld-wmts': {
           target: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}`,
           changeOrigin: true,
