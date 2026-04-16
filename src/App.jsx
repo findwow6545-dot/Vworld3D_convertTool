@@ -10,6 +10,7 @@ function App() {
   const [radius, setRadius] = useState(0.5);
   const [data, setData] = useState({ buildings: [], roads: [] });
   const [lod, setLod] = useState('auto'); // 'auto', 'lod1', 'lod2'
+  const [isCollecting, setIsCollecting] = useState(false);
   const [logs, setLogs] = useState([]);
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
