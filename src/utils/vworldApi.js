@@ -23,13 +23,8 @@ export const geocodeAddress = async (address) => {
   throw new Error('주소 변환 실패');
 };
 
-/**
- * 건물 데이터 수집 (가급적 많은 데이터를 긁어오도록 반경 보정)
- */
 export const fetchBuildingData = async (lat, lng, radiusKm = 0.5) => {
-  // 위도/경도 1도는 약 111km. 반경 Km를 도로 환산
-  const radiusDegrees = (radiusKm * 1.5) / 111; // 1.5배 보정하여 더 넓게 검색
-  
+  const radiusDegrees = (radiusKm * 1.5) / 111; 
   const xmin = lng - radiusDegrees;
   const ymin = lat - radiusDegrees;
   const xmax = lng + radiusDegrees;
@@ -39,50 +34,36 @@ export const fetchBuildingData = async (lat, lng, radiusKm = 0.5) => {
     key: API_KEY,
     service: 'data',
     request: 'GetFeature',
-    data: 'LT_C_AISBLD', // 건축물대장 건물 레이어 (3D)
+    data: 'LT_C_AISBLD', 
     geomFilter: `BOX(${xmin},${ymin},${xmax},${ymax})`,
     geometry: 'true',
     domain: window.location.hostname,
     size: '1000',
     format: 'json',
-    crs: 'EPSG:4326',
-    attrFilter: 'bld_hgt:>:0' // 높이가 있는 건물 우선 (필터 완화 가능)
+    crs: 'EPSG:4326'
+    // attrFilter 제거 (데이터 수집률 극대화)
   });
 
   try {
     const response = await fetch(`${DATA_BASE}?${params.toString()}`);
     const data = await response.json();
 
-    // 응답 결과 디버깅 로그 (브라우저 콘솔에서 확인 가능)
-    console.log('Vworld Raw Data:', data);
-
     if (data.GMLFeatureCollection?.featureMember) {
       const members = Array.isArray(data.GMLFeatureCollection.featureMember) 
         ? data.GMLFeatureCollection.featureMember : [data.GMLFeatureCollection.featureMember];
       
-      const results = members.map(fm => {
+      return members.map(fm => {
         const feature = Object.values(fm)[0];
-        return { 
-          type: 'Feature', 
-          geometry: feature.geometry, 
-          properties: feature.properties 
-        };
-      });
-      
-      // 높이가 0으로 수집된 경우 층수 기반 보정
-      return results.map(res => {
-        const p = res.properties;
+        const p = feature.properties;
+        
+        // 높이 정보 보정 (높이가 없으면 층수 * 3.5m, 그것도 없으면 기본 10m)
         let h = parseFloat(p.bld_hgt || p.height_m || p.A18 || 0);
-        if (h <= 0 && p.gro_flo_co) h = parseInt(p.gro_flo_co) * 3;
-        if (h <= 0) h = 10; // 최소 높이 보장
-        res.properties.bld_hgt = h;
-        return res;
+        if (h <= 0 && p.gro_flo_co) h = parseInt(p.gro_flo_co) * 3.5;
+        if (h <= 1) h = 10; 
+        
+        feature.properties.bld_hgt = h;
+        return { type: 'Feature', geometry: feature.geometry, properties: feature.properties };
       });
-    }
-
-    // 대체 API 응답 구조 (V2 특성)
-    if (data.response?.result?.featureCollection?.features) {
-      return data.response.result.featureCollection.features;
     }
   } catch (err) {
     console.error('Fetch Building Error:', err);
