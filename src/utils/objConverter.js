@@ -1,110 +1,83 @@
 /**
- * 3ds Max 최적화 OBJ 변환기 (V2)
- * 오목한(Concave) 건물에서도 면이 깨지지 않도록 N-Gon 방식을 채택하고
- * 중복 정점을 완벽히 제거하여 맥스의 자체 엔진이 면을 계산하도록 함.
+ * Vworld GeoJSON을 3ds Max 호환 OBJ(Y-Up)로 변환
  */
+export const generateObjFile = (data, centerCoord) => {
+  const { buildings = [], roads = [] } = data;
+  let objOutput = "# VWORLD 3D EXTRACTOR\n# Y-UP Coordinate System\ng Buildings\n";
+  let vCount = 1;
 
-export const generateObjFile = (features, center) => {
-  if (!features || !center) return '';
+  // 도 단위 좌표를 미터 단위로 변환 (중심점 기준)
+  const toMeter = (lng, lat) => {
+    const x = (lng - centerCoord.lng) * 88800; // 대략적인 경도->미터
+    const y = (lat - centerCoord.lat) * 111000; // 대략적인 위도->미터
+    return { x, y };
+  };
 
-  let lines = [];
-  lines.push('# Vworld 3D Optimized for 3ds Max (N-Gon Version)');
-  lines.push('s off'); // 면이 뭉개지지 않도록 설정
+  // 1. 건물 변환 (기존 로직 유지)
+  buildings.forEach((f) => {
+    const height = f.properties.bld_hgt || 12;
+    const coords = f.geometry.type === 'Polygon' 
+      ? f.geometry.coordinates[0] 
+      : f.geometry.coordinates[0][0];
 
-  const originLat = center.lat;
-  const originLng = center.lng;
-  const degToMeterLat = 111000;
-  const degToMeterLng = 111000 * Math.cos((originLat * Math.PI) / 180);
-
-  let vertexCount = 1;
-
-  features.forEach((feature, index) => {
-    const props = feature.properties || {};
-    const bldName = props.BLD_NM || props.bld_nm || props.A11 || `Building_${index}`;
+    const vertices = coords.map(c => toMeter(c[0], c[1]));
     
-    let height = 15;
-    if (props.A18 && parseFloat(props.A18) > 0) height = parseFloat(props.A18);
-    else if (props.bld_hgt && parseFloat(props.bld_hgt) > 0) height = parseFloat(props.bld_hgt);
-    else if (props.gro_flo_co && parseInt(props.gro_flo_co) > 0) height = parseInt(props.gro_flo_co) * 3.5;
+    // 바닥/천장 정점 생성 (Y-Up 적용: Z좌표가 높이가 아닌 Y좌표가 높이가 됨)
+    vertices.forEach(v => { objOutput += `v ${v.x.toFixed(4)} 0 ${(-v.y).toFixed(4)}\n`; });
+    vertices.forEach(v => { objOutput += `v ${v.x.toFixed(4)} ${height.toFixed(4)} ${(-v.y).toFixed(4)}\n`; });
 
-    const geom = feature.geometry;
-    if (!geom || !geom.coordinates) return;
-
-    let rings = [];
-    if (geom.type === 'Polygon') {
-      rings = geom.coordinates;
-    } else if (geom.type === 'MultiPolygon') {
-      rings = geom.coordinates.map(poly => poly[0]);
+    const n = vertices.length;
+    // N-Gon 면 생성 (Max 호환)
+    objOutput += `f ${Array.from({length: n}, (_, i) => vCount + i).join(' ')}\n`; // 바닥
+    objOutput += `f ${Array.from({length: n}, (_, i) => vCount + n + i).reverse().join(' ')}\n`; // 천장
+    for (let i = 0; i < n - 1; i++) {
+      objOutput += `f ${vCount + i} ${vCount + i + 1} ${vCount + n + i + 1} ${vCount + n + i}\n`;
     }
-
-    lines.push(`g ${bldName.replace(/[^a-zA-Z0-9]/g, '_')}`);
-
-    rings.forEach((ring) => {
-      // 1. 중복 정점 완벽 제거
-      let cleanRing = [];
-      const seen = new Set();
-      ring.forEach(([lng, lat]) => {
-        const key = `${lng.toFixed(8)},${lat.toFixed(8)}`;
-        if (!seen.has(key)) {
-          cleanRing.push([lng, lat]);
-          seen.add(key);
-        }
-      });
-
-      const count = cleanRing.length;
-      if (count < 3) return;
-
-      const baseStart = vertexCount;
-      const topStart = vertexCount + count;
-
-      // 2. 정점(Vertices) 생성
-      // 바닥(y=0)
-      cleanRing.forEach(([lng, lat]) => {
-        const x = (lng - originLng) * degToMeterLng;
-        const z = -(lat - originLat) * degToMeterLat;
-        lines.push(`v ${x.toFixed(4)} 0.0000 ${z.toFixed(4)}`);
-      });
-      // 천장(y=height)
-      cleanRing.forEach(([lng, lat]) => {
-        const x = (lng - originLng) * degToMeterLng;
-        const z = -(lat - originLat) * degToMeterLat;
-        lines.push(`v ${x.toFixed(4)} ${height.toFixed(4)} ${z.toFixed(4)}`);
-      });
-
-      // 3. 면(Faces) 생성
-      // 옆면 (Side Quads)
-      for (let i = 0; i < count; i++) {
-        const next = (i + 1) % count;
-        lines.push(`f ${baseStart + i} ${baseStart + next} ${topStart + next} ${topStart + i}`);
-      }
-
-      // 지붕 (N-Gon Top)
-      const topFace = [];
-      for (let i = 0; i < count; i++) {
-        topFace.push(topStart + i);
-      }
-      lines.push(`f ${topFace.join(' ')}`);
-
-      // 바닥 (N-Gon Bottom)
-      const bottomFace = [];
-      for (let i = count - 1; i >= 0; i--) {
-        bottomFace.push(baseStart + i);
-      }
-      lines.push(`f ${bottomFace.join(' ')}`);
-
-      vertexCount += count * 2;
-    });
+    vCount += n * 2;
   });
 
-  return lines.join('\n');
+  // 2. 도로 변환 (LineString -> Strips)
+  if (roads.length > 0) {
+    objOutput += "\ng Roads\n";
+    roads.forEach((r) => {
+      const coords = r.geometry.coordinates; // LineString
+      const roadWidth = 6.0; // 기본 도로폭 6m
+
+      for (let i = 0; i < coords.length - 1; i++) {
+        const p1 = toMeter(coords[i][0], coords[i][1]);
+        const p2 = toMeter(coords[i+1][0], coords[i+1][1]);
+        
+        // 방향 벡터 및 법선 벡터 계산하여 도로폭 확보
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        if (len === 0) continue;
+        
+        const nx = (-dy / len) * (roadWidth / 2);
+        const ny = (dx / len) * (roadWidth / 2);
+
+        // 도로 면 생성 (바닥에 딱 붙게 0.05m 높이)
+        const h = 0.05;
+        objOutput += `v ${(p1.x - nx).toFixed(4)} ${h} ${(-(p1.y - ny)).toFixed(4)}\n`;
+        objOutput += `v ${(p1.x + nx).toFixed(4)} ${h} ${(-(p1.y + ny)).toFixed(4)}\n`;
+        objOutput += `v ${(p2.x + nx).toFixed(4)} ${h} ${(-(p2.y + ny)).toFixed(4)}\n`;
+        objOutput += `v ${(p2.x - nx).toFixed(4)} ${h} ${(-(p2.y - ny)).toFixed(4)}\n`;
+        
+        objOutput += `f ${vCount} ${vCount+1} ${vCount+2} ${vCount+3}\n`;
+        vCount += 4;
+      }
+    });
+  }
+
+  return objOutput;
 };
 
 export const downloadObjFile = (content, filename) => {
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
   URL.revokeObjectURL(url);
 };
