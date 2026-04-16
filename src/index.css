@@ -115,3 +115,41 @@ body {
 }
 .log-item { margin-bottom: 8px; line-height: 1.4; color: #cbd5e1; }
 .log-time { color: var(--color-text-faint); margin-right: 8px; font-family: monospace; }
+
+/* LOD Selector Styles */
+.lod-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+}
+.lod-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 10px 5px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--color-text-faint);
+  text-align: center;
+}
+.lod-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.lod-btn.active {
+  background: var(--color-sidebar);
+  border-color: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.lod-btn-label {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+}
+.lod-btn-desc {
+  font-size: 10px;
+  opacity: 0.6;
+}

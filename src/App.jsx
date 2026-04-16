@@ -9,7 +9,7 @@ function App() {
   const [coord, setCoord] = useState(null); 
   const [radius, setRadius] = useState(0.5);
   const [data, setData] = useState({ buildings: [], roads: [] });
-  const [isCollecting, setIsCollecting] = useState(false);
+  const [lod, setLod] = useState('auto'); // 'auto', 'lod1', 'lod2'
   const [logs, setLogs] = useState([]);
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
@@ -33,6 +33,7 @@ function App() {
     try {
       const result = await fetchComplexData(
         coord.lat, coord.lng, radius, 
+        lod,
         (msg) => pushLog(msg, 'info', '📡')
       );
       setData(result);
@@ -64,6 +65,8 @@ function App() {
           coord={coord}
           radius={radius}
           setRadius={setRadius}
+          lod={lod}
+          setLod={setLod}
           onAddressSelect={handleAddressSelect}
           onFetch={handleFetch}
           onDownload={handleDownload}

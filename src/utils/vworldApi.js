@@ -30,7 +30,7 @@ export async function geocodeAddress(address) {
   throw new Error(res.data?.response?.error?.text || '주소 변환 실패');
 }
 
-export async function fetchComplexData(lat, lng, radiusKm, onProgress) {
+export async function fetchComplexData(lat, lng, radiusKm, lod, onProgress) {
   const { latDeg, lngDeg } = kmToDegrees(radiusKm, lat);
   const bbox = `BOX(${(lng - lngDeg).toFixed(6)},${(lat - latDeg).toFixed(6)},${(lng + lngDeg).toFixed(6)},${(lat + latDeg).toFixed(6)})`;
 
@@ -46,8 +46,15 @@ export async function fetchComplexData(lat, lng, radiusKm, onProgress) {
     geomfilter: bbox,
   };
 
-  // 1. 빌딩 레이어 선별 및 수집 (사용자가 만족했던 버전의 가장 안정적인 방식)
-  const LAYER_CANDIDATES = ['LT_C_AISBLD', 'LT_C_SPBD', 'LT_C_ARSIBLD'];
+  // 1. 빌딩 레이어 선별 및 수집
+  let LAYER_CANDIDATES = ['LT_C_AISBLD', 'LT_C_SPBD', 'LT_C_ARSIBLD'];
+  
+  if (lod === 'lod1') {
+    LAYER_CANDIDATES = ['LT_C_AISBLD'];
+  } else if (lod === 'lod2') {
+    LAYER_CANDIDATES = ['LT_C_SPBD'];
+  }
+
   let workingLayer = null;
   let lastError = '';
 

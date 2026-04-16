@@ -108,6 +108,26 @@ export default function SearchControl({
           />
         </div>
       </div>
+      {/* ── LOD 설정 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">🧱 건물 상세도 (LOD)</div>
+        <div className="lod-selector">
+          {[
+            { id: 'auto', label: '자동', desc: '최적 레이어' },
+            { id: 'lod1', label: 'LOD1', desc: '일반 건물' },
+            { id: 'lod2', label: 'LOD2', desc: '상세 건물' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              className={`lod-btn ${lod === item.id ? 'active' : ''}`}
+              onClick={() => setLod(item.id)}
+            >
+              <div className="lod-btn-label">{item.label}</div>
+              <div className="lod-btn-desc">{item.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── 좌표 정보 ── */}
       {coord && (
