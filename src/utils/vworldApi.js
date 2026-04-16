@@ -1,13 +1,6 @@
-// Vworld API 실제 엔드포인트
-const ADDR_ENDPOINT = 'https://api.vworld.kr/req/address';
-const DATA_ENDPOINT = 'https://api.vworld.kr/req/data';
-
-// 현재 환경 확인
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-// 로컬일 때만 프록시 경로 사용, 배포 환경에서는 직접 호출
-const ADDR_BASE = isLocal ? '/vworld-addr' : ADDR_ENDPOINT;
-const DATA_BASE = isLocal ? '/vworld-data' : DATA_ENDPOINT;
+// Vercel 프록시 경로 사용 (CORS 해결)
+const ADDR_BASE = '/api-addr';
+const DATA_BASE = '/api-data';
 
 // API 키 정제
 const API_KEY = (import.meta.env.VITE_VWORLD_API_KEY || '').trim();
@@ -30,13 +23,13 @@ export const geocodeAddress = async (address) => {
   });
 
   const url = `${ADDR_BASE}?${params.toString()}`;
-  console.log('Fetching:', url);
+  console.log('Sending request via Proxy:', url);
 
-  // Axios 대신 표준 Fetch API 사용 (배포 환경 안정성 확보)
   const response = await fetch(url);
   
   if (!response.ok) {
-    throw new Error(`HTTP 에러! 상태코드: ${response.status} (브이월드 도메인 인증 오류일 가능성이 높습니다)`);
+    if (response.status === 404) throw new Error('서버 경로(404) 에러. 배포가 완료될 때까지 잠시만 기다려주세요.');
+    throw new Error(`서버 요청 실패 (상태코드: ${response.status})`);
   }
 
   const data = await response.json();
@@ -49,7 +42,7 @@ export const geocodeAddress = async (address) => {
       address: address
     };
   } else {
-    const msg = data.response?.error?.text || '인증 실패: 브이월드에 등록한 주소와 현재 접속 주소가 일치하는지 확인하세요.';
+    const msg = data.response?.error?.text || '인증 실패: 브이월드 도메인 설정을 확인하세요.';
     throw new Error(msg);
   }
 };
