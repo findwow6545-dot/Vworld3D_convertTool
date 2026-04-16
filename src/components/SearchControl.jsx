@@ -52,6 +52,9 @@ export default function SearchControl({
         <div className="badge">VWORLD 3D TOOL</div>
         <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
         <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
+        <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
+          © 국립목포대학교 조경학과 조경표현연구실
+        </div>
       </div>
 
       {/* ── 주소 설정 ── */}
