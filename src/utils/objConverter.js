@@ -1,83 +1,149 @@
 /**
- * Vworld GeoJSON을 3ds Max 호환 OBJ(Y-Up)로 변환
+ * 3ds Max 최적화 OBJ 변환기 (V3 - Multiple Layers)
+ * 오목한(Concave) 건물에서도 면이 깨지지 않도록 N-Gon 방식을 채택하고
+ * 도로 데이터(LineString -> Polygon Strips) 지원 추가
  */
-export const generateObjFile = (data, centerCoord) => {
+
+export const generateObjFile = (data, center) => {
+  // data is expected to be { buildings: [], roads: [] }
   const { buildings = [], roads = [] } = data;
-  let objOutput = "# VWORLD 3D EXTRACTOR\n# Y-UP Coordinate System\ng Buildings\n";
-  let vCount = 1;
+  
+  if (!center) return '';
 
-  // 도 단위 좌표를 미터 단위로 변환 (중심점 기준)
-  const toMeter = (lng, lat) => {
-    const x = (lng - centerCoord.lng) * 88800; // 대략적인 경도->미터
-    const y = (lat - centerCoord.lat) * 111000; // 대략적인 위도->미터
-    return { x, y };
-  };
+  let lines = [];
+  lines.push('# Vworld 3D Optimized for 3ds Max (N-Gon Version)');
+  lines.push('s off'); // 면이 뭉개지지 않도록 설정
 
-  // 1. 건물 변환 (기존 로직 유지)
-  buildings.forEach((f) => {
-    const height = f.properties.bld_hgt || 12;
-    const coords = f.geometry.type === 'Polygon' 
-      ? f.geometry.coordinates[0] 
-      : f.geometry.coordinates[0][0];
+  const originLat = center.lat;
+  const originLng = center.lng;
+  const degToMeterLat = 111000;
+  const degToMeterLng = 111000 * Math.cos((originLat * Math.PI) / 180);
 
-    const vertices = coords.map(c => toMeter(c[0], c[1]));
-    
-    // 바닥/천장 정점 생성 (Y-Up 적용: Z좌표가 높이가 아닌 Y좌표가 높이가 됨)
-    vertices.forEach(v => { objOutput += `v ${v.x.toFixed(4)} 0 ${(-v.y).toFixed(4)}\n`; });
-    vertices.forEach(v => { objOutput += `v ${v.x.toFixed(4)} ${height.toFixed(4)} ${(-v.y).toFixed(4)}\n`; });
+  let vertexCount = 1;
 
-    const n = vertices.length;
-    // N-Gon 면 생성 (Max 호환)
-    objOutput += `f ${Array.from({length: n}, (_, i) => vCount + i).join(' ')}\n`; // 바닥
-    objOutput += `f ${Array.from({length: n}, (_, i) => vCount + n + i).reverse().join(' ')}\n`; // 천장
-    for (let i = 0; i < n - 1; i++) {
-      objOutput += `f ${vCount + i} ${vCount + i + 1} ${vCount + n + i + 1} ${vCount + n + i}\n`;
-    }
-    vCount += n * 2;
-  });
+  // 1. 건물 변환
+  if (buildings.length > 0) {
+    lines.push('\ng Buildings');
+    buildings.forEach((feature, index) => {
+      const props = feature.properties || {};
+      const bldName = props.BLD_NM || props.bld_nm || props.A11 || `Building_${index}`;
+      
+      let height = 15;
+      if (props.A18 && parseFloat(props.A18) > 0) height = parseFloat(props.A18);
+      else if (props.bld_hgt && parseFloat(props.bld_hgt) > 0) height = parseFloat(props.bld_hgt);
+      else if (props.gro_flo_co && parseInt(props.gro_flo_co) > 0) height = parseInt(props.gro_flo_co) * 3.5;
 
-  // 2. 도로 변환 (LineString -> Strips)
+      const geom = feature.geometry;
+      if (!geom || !geom.coordinates) return;
+
+      let rings = [];
+      if (geom.type === 'Polygon') {
+        rings = geom.coordinates;
+      } else if (geom.type === 'MultiPolygon') {
+        rings = geom.coordinates.map(poly => poly[0]);
+      }
+
+      rings.forEach((ring) => {
+        // 중복 정점 완벽 제거
+        let cleanRing = [];
+        const seen = new Set();
+        ring.forEach(([lng, lat]) => {
+          const key = `${lng.toFixed(8)},${lat.toFixed(8)}`;
+          if (!seen.has(key)) {
+            cleanRing.push([lng, lat]);
+            seen.add(key);
+          }
+        });
+
+        const count = cleanRing.length;
+        if (count < 3) return;
+
+        const baseStart = vertexCount;
+        const topStart = vertexCount + count;
+
+        // 바닥(y=0)
+        cleanRing.forEach(([lng, lat]) => {
+          const x = (lng - originLng) * degToMeterLng;
+          const z = -(lat - originLat) * degToMeterLat;
+          lines.push(`v ${x.toFixed(4)} 0.0000 ${z.toFixed(4)}`);
+        });
+        // 천장(y=height)
+        cleanRing.forEach(([lng, lat]) => {
+          const x = (lng - originLng) * degToMeterLng;
+          const z = -(lat - originLat) * degToMeterLat;
+          lines.push(`v ${x.toFixed(4)} ${height.toFixed(4)} ${z.toFixed(4)}`);
+        });
+
+        // 면(Faces) 생성
+        // 옆면 (Side Quads)
+        for (let i = 0; i < count; i++) {
+          const next = (i + 1) % count;
+          lines.push(`f ${baseStart + i} ${baseStart + next} ${topStart + next} ${topStart + i}`);
+        }
+
+        // 지붕 (N-Gon Top)
+        const topFace = [];
+        for (let i = 0; i < count; i++) {
+          topFace.push(topStart + i);
+        }
+        lines.push(`f ${topFace.join(' ')}`);
+
+        // 바닥 (N-Gon Bottom)
+        const bottomFace = [];
+        for (let i = count - 1; i >= 0; i--) {
+          bottomFace.push(baseStart + i);
+        }
+        lines.push(`f ${bottomFace.join(' ')}`);
+
+        vertexCount += count * 2;
+      });
+    });
+  }
+
+  // 2. 도로 변환
   if (roads.length > 0) {
-    objOutput += "\ng Roads\n";
-    roads.forEach((r) => {
-      const coords = r.geometry.coordinates; // LineString
-      const roadWidth = 6.0; // 기본 도로폭 6m
+    lines.push('\ng Roads');
+    roads.forEach((feature) => {
+      const geom = feature.geometry;
+      if (!geom || geom.type !== 'LineString' || !geom.coordinates) return;
+      const coords = geom.coordinates;
+      const roadWidth = 6.0; // 6미터 폭
 
       for (let i = 0; i < coords.length - 1; i++) {
-        const p1 = toMeter(coords[i][0], coords[i][1]);
-        const p2 = toMeter(coords[i+1][0], coords[i+1][1]);
-        
-        // 방향 벡터 및 법선 벡터 계산하여 도로폭 확보
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const len = Math.sqrt(dx*dx + dy*dy);
-        if (len === 0) continue;
-        
-        const nx = (-dy / len) * (roadWidth / 2);
-        const ny = (dx / len) * (roadWidth / 2);
+        const x1 = (coords[i][0] - originLng) * degToMeterLng;
+        const z1 = -(coords[i][1] - originLat) * degToMeterLat;
+        const x2 = (coords[i+1][0] - originLng) * degToMeterLng;
+        const z2 = -(coords[i+1][1] - originLat) * degToMeterLat;
 
-        // 도로 면 생성 (바닥에 딱 붙게 0.05m 높이)
-        const h = 0.05;
-        objOutput += `v ${(p1.x - nx).toFixed(4)} ${h} ${(-(p1.y - ny)).toFixed(4)}\n`;
-        objOutput += `v ${(p1.x + nx).toFixed(4)} ${h} ${(-(p1.y + ny)).toFixed(4)}\n`;
-        objOutput += `v ${(p2.x + nx).toFixed(4)} ${h} ${(-(p2.y + ny)).toFixed(4)}\n`;
-        objOutput += `v ${(p2.x - nx).toFixed(4)} ${h} ${(-(p2.y - ny)).toFixed(4)}\n`;
-        
-        objOutput += `f ${vCount} ${vCount+1} ${vCount+2} ${vCount+3}\n`;
-        vCount += 4;
+        const dx = x2 - x1;
+        const dz = z2 - z1;
+        const len = Math.sqrt(dx*dx + dz*dz);
+        if (len === 0) continue;
+
+        const nx = (-dz / len) * (roadWidth / 2);
+        const nz = (dx / len) * (roadWidth / 2);
+
+        const h = 0.05; // 지면 위 5cm
+        lines.push(`v ${(x1 - nx).toFixed(4)} ${h} ${(z1 - nz).toFixed(4)}`);
+        lines.push(`v ${(x1 + nx).toFixed(4)} ${h} ${(z1 + nz).toFixed(4)}`);
+        lines.push(`v ${(x2 + nx).toFixed(4)} ${h} ${(z2 + nz).toFixed(4)}`);
+        lines.push(`v ${(x2 - nx).toFixed(4)} ${h} ${(z2 - nz).toFixed(4)}`);
+
+        lines.push(`f ${vertexCount} ${vertexCount+1} ${vertexCount+2} ${vertexCount+3}`);
+        vertexCount += 4;
       }
     });
   }
 
-  return objOutput;
+  return lines.join('\n');
 };
 
 export const downloadObjFile = (content, filename) => {
   const blob = new Blob([content], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
   URL.revokeObjectURL(url);
 };

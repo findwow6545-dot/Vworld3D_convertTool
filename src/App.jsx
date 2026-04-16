@@ -8,13 +8,13 @@ function App() {
   const [address, setAddress] = useState('');
   const [coord, setCoord] = useState(null); 
   const [radius, setRadius] = useState(0.5);
-  const [data, setData] = useState({ buildings: [], roads: [] }); 
+  const [data, setData] = useState({ buildings: [], roads: [] });
   const [isCollecting, setIsCollecting] = useState(false);
   const [logs, setLogs] = useState([]);
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
-    setLogs(prev => [...prev.slice(-20), newLog]);
+    setLogs(prev => [...prev.slice(-29), newLog]);
   }, []);
 
   const handleAddressSelect = useCallback((data) => {
@@ -27,10 +27,14 @@ function App() {
   const handleFetch = useCallback(async () => {
     if (!coord) return;
     setIsCollecting(true);
+    setData({ buildings: [], roads: [] });
     pushLog(`복합 데이터(건물+도로) 수집 시작...`, 'info', '🚀');
 
     try {
-      const result = await fetchComplexData(coord.lat, coord.lng, radius, (msg) => pushLog(msg, 'info', '📡'));
+      const result = await fetchComplexData(
+        coord.lat, coord.lng, radius, 
+        (msg) => pushLog(msg, 'info', '📡')
+      );
       setData(result);
       pushLog(`수집 완료: 건물 ${result.buildings.length}개, 도로 ${result.roads.length}개`, 'success', '✅');
     } catch (err) {
@@ -49,18 +53,13 @@ function App() {
 
   const stats = useMemo(() => ({
     total: data.buildings.length + data.roads.length,
-    buildings: data.buildings.length,
-    roads: data.roads.length
+    withHeight: data.buildings.length,
+    vertices: (data.buildings.length * 24) + (data.roads.length * 4)
   }), [data]);
 
   return (
     <div className="app-container">
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <h1>VWORLD 3D TOOL</h1>
-          <p>고급 3D 건물 및 도로 데이터 추출 도구</p>
-        </div>
-
         <SearchControl 
           coord={coord}
           radius={radius}
