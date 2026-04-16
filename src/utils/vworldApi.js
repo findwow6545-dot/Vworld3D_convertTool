@@ -41,7 +41,7 @@ export async function geocodeAddress(address) {
     address,
     format:   'json',
     key:      API_KEY,
-    domain:   REGISTERED_DOMAIN, // 등록된 도메인으로 강제 지정
+    domain:   window.location.hostname, // 현재 접속한 도메인으로 자동 설정
   };
 
   try {
