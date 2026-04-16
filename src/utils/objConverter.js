@@ -10,8 +10,8 @@ export const generateObjFile = (data, centerCoord) => {
 
   if (!centerCoord) return '';
 
-  let objOutput = "# VWORLD 3D EXTRACTOR - Precision N-Gon Version\n";
-  objOutput += "s off\n"; // 3ds Max 스무딩 그룹 자동적용 방지 (검은 그림자 제거)
+  let objOutput = "# VWORLD 3D EXTRACTOR - Pro Version\n";
+  objOutput += "s off\n"; // 스무딩 제거
   
   let vCount = 1;
 
@@ -21,7 +21,7 @@ export const generateObjFile = (data, centerCoord) => {
     return { x, y };
   };
 
-  // 1. 건물 변환 (N-Gon 로직)
+  // 1. 건물 변환
   if (buildings.length > 0) {
     objOutput += "\ng Buildings\n";
     buildings.forEach((f, idx) => {
@@ -30,9 +30,9 @@ export const generateObjFile = (data, centerCoord) => {
 
       let rings = [];
       if (f.geometry && f.geometry.type === 'Polygon') {
-        rings = f.geometry.coordinates;
+        rings = [f.geometry.coordinates[0]]; // 가장 바깥쪽 링만 사용 (오목/볼록 버그 최소화)
       } else if (f.geometry && f.geometry.type === 'MultiPolygon') {
-        rings = f.geometry.coordinates.map(poly => poly[0]);
+        rings = [f.geometry.coordinates[0][0]];
       }
       
       if (!rings || rings.length === 0) return;
@@ -40,16 +40,14 @@ export const generateObjFile = (data, centerCoord) => {
       objOutput += `g Building_${idx}\n`;
 
       rings.forEach((ring) => {
-        // 중복 정점 제거
-        let cleanRing = [];
-        const seen = new Set();
-        ring.forEach(([lng, lat]) => {
-          const key = `${lng.toFixed(8)},${lat.toFixed(8)}`;
-          if (!seen.has(key)) {
-            cleanRing.push([lng, lat]);
-            seen.add(key);
-          }
-        });
+        // GeoJSON 폴리곤은 첫점과 끝점이 일치함. 끝점 1개를 제거하여 루프 형성.
+        // Set을 쓰면 중간에 교차하는 정점 순서까지 파괴되어 "꼬임"이 발생하므로 절대 사용금지.
+        let cleanRing = [...ring];
+        const first = cleanRing[0];
+        const last = cleanRing[cleanRing.length - 1];
+        if (first[0] === last[0] && first[1] === last[1]) {
+          cleanRing.pop(); // 끝점 제거 (n-1개로 만듦)
+        }
 
         const count = cleanRing.length;
         if (count < 3) return;
@@ -57,7 +55,6 @@ export const generateObjFile = (data, centerCoord) => {
         const baseStart = vCount;
         const topStart = vCount + count;
 
-        // 바닥 및 천장 점 생성
         cleanRing.forEach(([lng, lat]) => {
           const p = toMeter(lng, lat);
           objOutput += `v ${p.x.toFixed(4)} 0.0000 ${(-p.y).toFixed(4)}\n`;
@@ -67,18 +64,17 @@ export const generateObjFile = (data, centerCoord) => {
           objOutput += `v ${p.x.toFixed(4)} ${h.toFixed(4)} ${(-p.y).toFixed(4)}\n`;
         });
 
-        // 옆면 (Quads)
+        // 옆면 
         for (let i = 0; i < count; i++) {
           const next = (i + 1) % count;
           objOutput += `f ${baseStart + i} ${baseStart + next} ${topStart + next} ${topStart + i}\n`;
         }
 
-        // 지붕 (N-Gon)
+        // 지붕/바닥 (N-Gon)
         const topFace = [];
         for (let i = 0; i < count; i++) topFace.push(topStart + i);
         objOutput += `f ${topFace.join(' ')}\n`;
 
-        // 바닥 (N-Gon - 법선 방향을 위해 역순)
         const bottomFace = [];
         for (let i = count - 1; i >= 0; i--) bottomFace.push(baseStart + i);
         objOutput += `f ${bottomFace.join(' ')}\n`;
@@ -114,14 +110,21 @@ export const generateObjFile = (data, centerCoord) => {
           const len = Math.sqrt(dx*dx + dy*dy);
           if (len === 0) continue;
           
-          const nx = (-dy / len) * (roadWidth / 2);
-          const ny = (dx / len) * (roadWidth / 2);
+          // 노드(교차로)에서 끊어져 보이는 현상을 막기 위해 양 끝을 폭의 절반만큼 연장 (Overlap)
+          const ex = (dx / len) * (roadWidth / 2.0);
+          const ey = (dy / len) * (roadWidth / 2.0);
+          
+          const extP1 = { x: p1.x - ex, y: p1.y - ey };
+          const extP2 = { x: p2.x + ex, y: p2.y + ey };
+
+          const nx = (-dy / len) * (roadWidth / 2.0);
+          const ny = (dx / len) * (roadWidth / 2.0);
 
           const h = 0.05; 
-          objOutput += `v ${(p1.x - nx).toFixed(4)} ${h} ${(-(p1.y - ny)).toFixed(4)}\n`;
-          objOutput += `v ${(p1.x + nx).toFixed(4)} ${h} ${(-(p1.y + ny)).toFixed(4)}\n`;
-          objOutput += `v ${(p2.x + nx).toFixed(4)} ${h} ${(-(p2.y + ny)).toFixed(4)}\n`;
-          objOutput += `v ${(p2.x - nx).toFixed(4)} ${h} ${(-(p2.y - ny)).toFixed(4)}\n`;
+          objOutput += `v ${(extP1.x - nx).toFixed(4)} ${h} ${(-(extP1.y - ny)).toFixed(4)}\n`;
+          objOutput += `v ${(extP1.x + nx).toFixed(4)} ${h} ${(-(extP1.y + ny)).toFixed(4)}\n`;
+          objOutput += `v ${(extP2.x + nx).toFixed(4)} ${h} ${(-(extP2.y + ny)).toFixed(4)}\n`;
+          objOutput += `v ${(extP2.x - nx).toFixed(4)} ${h} ${(-(extP2.y - ny)).toFixed(4)}\n`;
           
           objOutput += `f ${vCount} ${vCount+1} ${vCount+2} ${vCount+3}\n`;
           vCount += 4;
