@@ -1,11 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/vworld-api/:path*",
-      "destination": "https://api.vworld.kr/req/:path*"
+      "source": "/vworld-api/address",
+      "destination": "https://api.vworld.kr/req/address"
     },
     {
-      "source": "/vworld-wmts/:path*",
+      "source": "/vworld-api/data",
+      "destination": "https://api.vworld.kr/req/data"
+    },
+    {
+      "source": "/vworld-api/wmts/:path*",
       "destination": "https://api.vworld.kr/req/wmts/:path*"
     },
     {
