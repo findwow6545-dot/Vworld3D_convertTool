@@ -1,16 +1,16 @@
 {
   "rewrites": [
     {
-      "source": "/api-addr",
-      "destination": "http://api.vworld.kr/req/address"
+      "source": "/vworld-api/address",
+      "destination": "https://api.vworld.kr/req/address"
     },
     {
-      "source": "/api-data",
-      "destination": "http://api.vworld.kr/req/data"
+      "source": "/vworld-api/data",
+      "destination": "https://api.vworld.kr/req/data"
     },
     {
-      "source": "/api-wmts/:path*",
-      "destination": "http://api.vworld.kr/req/wmts/1.0.0/:path*"
+      "source": "/vworld-api/wmts/:path*",
+      "destination": "https://api.vworld.kr/req/wmts/1.0.0/:path*"
     },
     {
       "source": "/(.*)",
