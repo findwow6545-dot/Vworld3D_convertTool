@@ -117,6 +117,11 @@ function App() {
             stats={stats}
             geocodeAddress={geocodeAddress}
           />
+          {/* 사이드바 하단 카피라이트 */}
+          <div className="sidebar-footer">
+            <p>© 국립목포대학교 조경학과</p>
+            <p>조경표현연구실 (Landscape Expression Lab)</p>
+          </div>
         </aside>
         <main className="map-area">
           <MapContainer 

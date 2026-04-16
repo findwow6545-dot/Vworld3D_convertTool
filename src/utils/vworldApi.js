@@ -68,6 +68,7 @@ export const fetchBuildingData = async (lat, lng, radiusKm = 0.5) => {
     geometry: 'true',
     domain: window.location.hostname,
     size: '1000',
+    format: 'json', // JSON 포맷 명시 추가
   });
 
   const url = `${DATA_BASE}?${params.toString()}`;
