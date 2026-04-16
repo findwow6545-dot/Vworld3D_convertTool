@@ -83,7 +83,7 @@ export default function SearchControl({
           </div>
           <span style={{ color: 'var(--color-text-faint)', fontSize: '12px' }}>▼</span>
         </div>
-        <button className="btn-search-address" onClick={handleOpenPostcode}>
+        <button className="btn-search" onClick={handleOpenPostcode}>
           🔍 주소 검색 (다음 API)
         </button>
       </div>
@@ -135,6 +135,7 @@ export default function SearchControl({
           className="btn-primary"
           onClick={onFetch}
           disabled={isCollecting || !coord}
+          style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', color: 'white' }}
         >
           {isCollecting ? (
             <><div className="spinner" /> 📡 데이터 수집 중...</>
@@ -143,7 +144,7 @@ export default function SearchControl({
           )}
         </button>
         {stats.total > 0 && (
-          <button className="btn-download" onClick={onDownload} disabled={isCollecting} style={{ marginTop: '10px' }}>
+          <button className="btn-download" onClick={onDownload} disabled={isCollecting}>
             ⬇️ OBJ 파일 다운로드
           </button>
         )}
