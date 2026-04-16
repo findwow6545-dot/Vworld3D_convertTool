@@ -1,33 +1,37 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  build: {
-    rollupOptions: {
-      external: [],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const API_KEY = env.VITE_VWORLD_API_KEY;
+
+  return {
+    plugins: [react()],
+    css: {
+      devSourcemap: true,
     },
-  },
-  // 브이월드 CORS 우회 프록시 (개발 서버)
-  server: {
-    port: 3000,
-    open: true,
-    proxy: {
-      // /vworld-api/* → https://api.vworld.kr/req/*  (Data/Geocoder API)
-      '/vworld-api': {
-        target: 'https://api.vworld.kr',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/vworld-api/, '/req'),
-        secure: true,
-      },
-      // /vworld-wmts/* → https://api.vworld.kr/req/wmts/* (Cesium 타일 CORS 우회)
-      '/vworld-wmts': {
-        target: 'https://api.vworld.kr',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/vworld-wmts/, '/req/wmts'),
-        secure: true,
+    server: {
+      port: 3000,
+      proxy: {
+        // 주소 검색 프록시
+        '/vworld-addr': {
+          target: 'https://api.vworld.kr/req/address',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/vworld-addr/, ''),
+        },
+        // 데이터 수집 프록시
+        '/vworld-data': {
+          target: 'https://api.vworld.kr/req/data',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/vworld-data/, ''),
+        },
+        // WMTS 지도 프록시
+        '/vworld-wmts': {
+          target: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}`,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/vworld-wmts/, ''),
+        },
       },
     },
-  },
-})
+  };
+});
