@@ -72,21 +72,17 @@ function App() {
           stats={stats}
           geocodeAddress={geocodeAddress}
         />
-        {/* 진단 정보 (검색창 바로 밑으로 이동) */}
-        <div style={{ padding: '15px 30px', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', margin: '0 30px 20px' }}>
+        
+        {/* 배포 환경 진단 도구 */}
+        <div style={{ padding: '15px 30px', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', margin: '0 30px 10px' }}>
           <div style={{ fontSize: '11px', color: '#00d2ff', fontWeight: 'bold', marginBottom: '5px' }}>🚨 배포 환경 진단 도구</div>
           <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>도메인: {window.location.hostname}</div>
           <div style={{ fontSize: '10px', color: import.meta.env.VITE_VWORLD_API_KEY ? '#00ff00' : '#ff4444', fontWeight: 'bold' }}>
-            API 키 상태: {import.meta.env.VITE_VWORLD_API_KEY ? '✅ 설정됨' : '❌ 미설정 (Vercel 확인 필요)'}
+            API 키 상태: {import.meta.env.VITE_VWORLD_API_KEY ? '✅ 설정됨' : '❌ 미설정'}
           </div>
         </div>
-        {/* 키 및 도메인 진단 정보 */}
-        <div style={{ padding: '10px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.2)', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-          <div>도메인: {window.location.hostname}</div>
-          <div>API 키: {import.meta.env.VITE_VWORLD_API_KEY ? '설정됨' : '미설정(확인필요)'}</div>
-        </div>
-        {/* 국립목포대학교 카피라이트 */}
-        <div style={{ padding: '15px 20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '0' }}>
+
+        <div style={{ padding: '15px 20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           © 국립목포대학교 조경학과 조경표현연구실
         </div>
       </aside>
