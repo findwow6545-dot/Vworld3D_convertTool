@@ -72,17 +72,8 @@ function App() {
           stats={stats}
           geocodeAddress={geocodeAddress}
         />
-        
-        {/* 배포 환경 진단 도구 */}
-        <div style={{ padding: '15px 30px', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', margin: '0 30px 10px' }}>
-          <div style={{ fontSize: '11px', color: '#00d2ff', fontWeight: 'bold', marginBottom: '5px' }}>🚨 배포 환경 진단 도구</div>
-          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>도메인: {window.location.hostname}</div>
-          <div style={{ fontSize: '10px', color: import.meta.env.VITE_VWORLD_API_KEY ? '#00ff00' : '#ff4444', fontWeight: 'bold' }}>
-            API 키 상태: {import.meta.env.VITE_VWORLD_API_KEY ? '✅ 설정됨' : '❌ 미설정'}
-          </div>
-        </div>
 
-        <div style={{ padding: '15px 20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
           © 국립목포대학교 조경학과 조경표현연구실
         </div>
       </aside>

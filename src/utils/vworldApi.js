@@ -73,8 +73,7 @@ export async function fetchBuildingsInRadius(lat, lng, radiusKm, onProgress) {
   }
 
   if (!workingLayer) {
-    alert(`인증 실패 사유: ${lastError}`);
-    throw new Error('인증 실패');
+    throw new Error(`데이터 수집 불가: ${lastError || '인증 오류'}`);
   }
 
   const ALL_FEATURES = [];
