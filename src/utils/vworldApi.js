@@ -53,6 +53,8 @@ export async function fetchComplexData(lat, lng, radiusKm, lod, onProgress) {
     LAYER_CANDIDATES = ['LT_C_AISBLD'];
   } else if (lod === 'lod2') {
     LAYER_CANDIDATES = ['LT_C_SPBD'];
+  } else if (lod === 'lod3') {
+    LAYER_CANDIDATES = ['LT_C_SPBD', 'LT_C_AISBLD']; // 상세 레이어 우선
   }
 
   let workingLayer = null;

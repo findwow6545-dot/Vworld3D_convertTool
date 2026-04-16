@@ -118,6 +118,7 @@ export default function SearchControl({
             { id: 'auto', label: '자동', desc: '최적 레이어' },
             { id: 'lod1', label: 'LOD1', desc: '일반 건물' },
             { id: 'lod2', label: 'LOD2', desc: '상세 건물' },
+            { id: 'lod3', label: 'LOD3', desc: '정밀 건물' },
           ].map((item) => (
             <button
               key={item.id}

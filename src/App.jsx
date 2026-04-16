@@ -9,7 +9,7 @@ function App() {
   const [coord, setCoord] = useState(null); 
   const [radius, setRadius] = useState(0.5);
   const [data, setData] = useState({ buildings: [], roads: [] });
-  const [lod, setLod] = useState('auto'); // 'auto', 'lod1', 'lod2'
+  const [lod, setLod] = useState('auto'); // 'auto', 'lod1', 'lod2', 'lod3'
   const [isCollecting, setIsCollecting] = useState(false);
   const [logs, setLogs] = useState([]);
 
