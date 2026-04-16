@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import SearchControl from './components/SearchControl';
 import MapContainer from './components/MapContainer';
 import { generateObjFile, downloadObjFile } from './utils/objConverter';
-import { geocodeAddress, fetchBuildingsInRadius } from './utils/vworldApi'; // fetchBuildingsInRadius 추가
+import { geocodeAddress, fetchBuildingData } from './utils/vworldApi'; // fetchBuildingsInRadius 추가
 
 function App() {
   const [address, setAddress] = useState('');
@@ -46,7 +46,7 @@ function App() {
     pushLog(`수집 시작: 반경 ${radius} km`, 'info', '🚀');
 
     try {
-      const buildings = await fetchBuildingsInRadius(
+      const buildings = await fetchBuildingData(
         coord.lat,
         coord.lng,
         radius,
