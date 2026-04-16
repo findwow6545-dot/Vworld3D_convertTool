@@ -54,9 +54,9 @@ function App() {
   }, [data, coord, address]);
 
   const stats = useMemo(() => ({
-    total: data.buildings.length + data.roads.length,
-    withHeight: data.buildings.length,
-    vertices: (data.buildings.length * 24) + (data.roads.length * 4)
+    total: (data?.buildings?.length || 0) + (data?.roads?.length || 0),
+    withHeight: data?.buildings?.length || 0,
+    vertices: ((data?.buildings?.length || 0) * 24) + ((data?.roads?.length || 0) * 4)
   }), [data]);
 
   return (

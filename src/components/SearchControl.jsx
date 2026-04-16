@@ -8,6 +8,8 @@ export default function SearchControl({
   coord,
   radius,
   setRadius,
+  lod,
+  setLod,
   onAddressSelect,
   onFetch,
   onDownload,
