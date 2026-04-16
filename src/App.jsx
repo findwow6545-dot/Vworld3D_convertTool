@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import SearchControl from './components/SearchControl';
 import MapContainer from './components/MapContainer';
 import { generateObjFile, downloadObjFile } from './utils/objConverter';
-import { geocodeAddress, fetchBuildingData } from './utils/vworldApi';
+import { geocodeAddress, fetchBuildingsInRadius } from './utils/vworldApi';
 
 function App() {
   const [address, setAddress] = useState('');
@@ -14,7 +14,7 @@ function App() {
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
-    setLogs(prev => [...prev.slice(-19), newLog]);
+    setLogs(prev => [...prev.slice(-29), newLog]);
   }, []);
 
   const handleAddressSelect = useCallback((data) => {
@@ -28,30 +28,32 @@ function App() {
     if (!coord) return;
     setIsCollecting(true);
     setFeatures([]);
-    pushLog(`수집 시작 (반경 ${radius}km)...`, 'info', '🚀');
+    pushLog(`데이터 수집 시작...`, 'info', '🚀');
 
     try {
-      const buildings = await fetchBuildingData(coord.lat, coord.lng, radius);
+      const buildings = await fetchBuildingsInRadius(
+        coord.lat, coord.lng, radius, 
+        (msg) => pushLog(msg, 'info', '📡')
+      );
       setFeatures(buildings);
       pushLog(`수집 완료: ${buildings.length}개 건물`, 'success', '✅');
     } catch (err) {
-      pushLog(`수집 오류: ${err.message}`, 'error', '❌');
+      pushLog(`오류: ${err.message}`, 'error', '❌');
     } finally {
       setIsCollecting(false);
     }
   }, [coord, radius, pushLog]);
 
   const handleDownload = useCallback(() => {
-    if (features.length === 0) return;
+    if (!features.length) return;
     const objStr = generateObjFile(features, coord);
     const safeName = (address || 'vworld').replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
     downloadObjFile(objStr, `${safeName}.obj`);
-    pushLog(`OBJ 다운로드 완료`, 'success', '⬇️');
-  }, [features, coord, address, pushLog]);
+  }, [features, coord, address]);
 
   const stats = useMemo(() => ({
     total: features.length,
-    withHeight: features.length, // 보정됨
+    withHeight: features.length,
     vertices: features.length * 24
   }), [features]);
 
@@ -70,7 +72,7 @@ function App() {
           stats={stats}
           geocodeAddress={geocodeAddress}
         />
-        {/* 요청하신 카피라이트 */}
+        {/* 국립목포대학교 카피라이트 */}
         <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
           © 국립목포대학교 조경학과 조경표현연구실
         </div>
