@@ -23,15 +23,7 @@ export const geocodeAddress = async (address) => {
   });
 
   const url = `${ADDR_BASE}?${params.toString()}`;
-  console.log('Sending request via Proxy:', url);
-
   const response = await fetch(url);
-  
-  if (!response.ok) {
-    if (response.status === 404) throw new Error('서버 경로(404) 에러. 배포가 완료될 때까지 잠시만 기다려주세요.');
-    throw new Error(`서버 요청 실패 (상태코드: ${response.status})`);
-  }
-
   const data = await response.json();
 
   if (data.response && data.response.status === 'OK') {
@@ -42,8 +34,7 @@ export const geocodeAddress = async (address) => {
       address: address
     };
   } else {
-    const msg = data.response?.error?.text || '인증 실패: 브이월드 도메인 설정을 확인하세요.';
-    throw new Error(msg);
+    throw new Error(data.response?.error?.text || '주소 변환 실패');
   }
 };
 
@@ -51,39 +42,48 @@ export const geocodeAddress = async (address) => {
  * 특정 좌표 주변의 3D 건물 데이터 수집
  */
 export const fetchBuildingData = async (lat, lng, radiusKm = 0.5) => {
-  const radiusDegrees = radiusKm / 111;
-  const bbox = [
-    lng - radiusDegrees,
-    lat - radiusDegrees,
-    lng + radiusDegrees,
-    lat + radiusDegrees
-  ].join(',');
+  // 실제 반경을 약간 더 여유 있게 잡음 (보정치)
+  const radiusDegrees = radiusKm / 110; 
+  const xmin = lng - radiusDegrees;
+  const ymin = lat - radiusDegrees;
+  const xmax = lng + radiusDegrees;
+  const ymax = lat + radiusDegrees;
 
   const params = new URLSearchParams({
     key: API_KEY,
     service: 'data',
     request: 'GetFeature',
     data: 'LT_C_AISBLD', 
-    geomFilter: `BOX(${bbox})`,
+    geomFilter: `BOX(${xmin},${ymin},${xmax},${ymax})`,
     geometry: 'true',
     domain: window.location.hostname,
     size: '1000',
-    format: 'json', // JSON 포맷 명시 추가
+    format: 'json',
+    crs: 'EPSG:4326' // 좌표계 명시
   });
 
-  const url = `${DATA_BASE}?${params.toString()}`;
-  const response = await fetch(url);
-  const data = await response.json();
+  try {
+    const url = `${DATA_BASE}?${params.toString()}`;
+    const response = await fetch(url);
+    const data = await response.json();
 
-  if (data.GMLFeatureCollection) {
-    return data.GMLFeatureCollection.featureMember.map(fm => {
-      const feature = Object.values(fm)[0];
-      return {
-        type: 'Feature',
-        geometry: feature.geometry,
-        properties: feature.properties
-      };
-    });
+    if (data.GMLFeatureCollection && data.GMLFeatureCollection.featureMember) {
+      // 데이터가 1개인 경우 배열이 아닐 수 있으므로 처리
+      const members = Array.isArray(data.GMLFeatureCollection.featureMember) 
+        ? data.GMLFeatureCollection.featureMember 
+        : [data.GMLFeatureCollection.featureMember];
+
+      return members.map(fm => {
+        const feature = Object.values(fm)[0];
+        return {
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: feature.properties
+        };
+      });
+    }
+  } catch (e) {
+    console.error('Data Fetch Error:', e);
   }
   return [];
 };
