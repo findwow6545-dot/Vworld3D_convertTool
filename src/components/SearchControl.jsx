@@ -15,6 +15,8 @@ export default function SearchControl({
   logs,
   stats,
   geocodeAddress,
+  isOpen,
+  setIsOpen,
 }) {
   const logEndRef = useRef(null);
 
@@ -47,15 +49,20 @@ export default function SearchControl({
   const sliderBg = `linear-gradient(to right, var(--color-accent) ${sliderPct}%, rgba(255,255,255,0.1) ${sliderPct}%)`;
 
   return (
-    <div className="search-control">
-      <div className="sidebar-header">
-        <div className="badge">VWORLD 3D TOOL</div>
-        <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
-        <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
-        <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
-          © 국립목포대학교 조경학과 조경표현연구실
+    <>
+      <button className={`sidebar-toggle ${isOpen ? 'open' : 'closed'}`} onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? '◀' : '☰'}
+      </button>
+      
+      <div className="search-control">
+        <div className="sidebar-header">
+          <div className="badge">VWORLD 3D TOOL</div>
+          <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
+          <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
+          <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
+            © 국립목포대학교 조경학과 조경표현연구실
+          </div>
         </div>
-      </div>
 
       {/* ── 주소 설정 ── */}
       <div className="sidebar-section">
@@ -83,6 +90,7 @@ export default function SearchControl({
           </div>
           <span style={{ color: 'var(--color-text-faint)', fontSize: '12px' }}>▼</span>
         </div>
+        <div className="instruction-text">💡 주소를 입력하거나 지도를 더블클릭하세요!</div>
         <button className="btn-search-address" onClick={handleOpenPostcode}>
           🔍 주소 검색 (다음 API)
         </button>
@@ -165,6 +173,6 @@ export default function SearchControl({
           <div ref={logEndRef} />
         </div>
       </div>
-    </div>
+    </>
   );
 }

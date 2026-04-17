@@ -11,6 +11,7 @@ function App() {
   const [data, setData] = useState({ buildings: [], roads: [] });
   const [isCollecting, setIsCollecting] = useState(false);
   const [logs, setLogs] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
@@ -70,7 +71,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <SearchControl 
           coord={coord}
           radius={radius}
@@ -82,6 +83,8 @@ function App() {
           logs={logs}
           stats={stats}
           geocodeAddress={geocodeAddress}
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
         />
 
         <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
