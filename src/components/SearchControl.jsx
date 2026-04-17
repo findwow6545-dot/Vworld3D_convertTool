@@ -173,6 +173,7 @@ export default function SearchControl({
           <div ref={logEndRef} />
         </div>
       </div>
-    </>
+    </div>
+  </>
   );
 }
