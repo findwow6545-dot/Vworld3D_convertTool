@@ -87,10 +87,14 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
     
-    // 줌인 시점 중앙 보정 (오프셋 없이 정중앙에 위치)
+    // 이미지와 유사한 입체적인 3D 조감도 시점 적용
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, 1000), // 높이 1000m에서 정적으로 내려다봄
-      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
+      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat - 0.012, 1600), // 남쪽에서 위로 바라보도록 오프셋
+      orientation: { 
+        heading: 0, 
+        pitch: Cesium.Math.toRadians(-35), // 입체감을 위한 기울기
+        roll: 0 
+      }
     });
     
     // 이전 가이드 엔티티 삭제
