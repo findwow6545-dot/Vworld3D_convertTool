@@ -20,6 +20,8 @@ export default function SearchControl({
   setIsOpen,
   mapType,
   onMapTypeChange,
+  showLabels,
+  onShowLabelsChange,
 }) {
   const logEndRef = useRef(null);
 
@@ -77,6 +79,15 @@ export default function SearchControl({
             onClick={() => onMapTypeChange('street')}
           >
             일반지도
+          </button>
+        </div>
+        <div style={{ marginTop: '10px' }}>
+          <button 
+            className={`map-selector-btn ${!showLabels ? 'active' : ''}`}
+            onClick={() => onShowLabelsChange(!showLabels)}
+            style={{ width: '100%', fontSize: '11px', background: !showLabels ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)' }}
+          >
+            {showLabels ? '🔓 정보 텍스트 표시 중' : '🔒 정보 텍스트 숨김'}
           </button>
         </div>
       </div>

@@ -14,6 +14,7 @@ function App() {
   const [logs, setLogs] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mapType, setMapType] = useState('satellite'); // satellite, street
+  const [showLabels, setShowLabels] = useState(true);
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
@@ -120,6 +121,8 @@ function App() {
           setIsOpen={setIsSidebarOpen}
           mapType={mapType}
           onMapTypeChange={setMapType}
+          showLabels={showLabels}
+          onShowLabelsChange={setShowLabels}
         />
 
         <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
@@ -134,6 +137,7 @@ function App() {
           features={data} 
           onMapDoubleClick={handleMapDoubleClick}
           mapType={mapType}
+          showLabels={showLabels}
         />
       </main>
     </div>

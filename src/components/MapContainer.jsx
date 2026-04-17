@@ -93,7 +93,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, ma
     };
   }, []);
 
-  // 🗺️ 지도 타입 변경 감지 (위성/일반)
+  // 🗺️ 지도 타입 변경 감지 (위성/일반) 및 정보 텍스트 토글
   useEffect(() => {
     if (!viewerRef.current || !IS_KEY_SET) return;
     const viewer = viewerRef.current;
@@ -107,11 +107,14 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, ma
 
     if (mapType === 'satellite') {
       viewer.imageryLayers.addImageryProvider(layers.satellite);
-      viewer.imageryLayers.addImageryProvider(layers.hybrid);
+      if (showLabels) {
+        viewer.imageryLayers.addImageryProvider(layers.hybrid);
+      }
     } else {
       viewer.imageryLayers.addImageryProvider(layers.base);
+      // 일반 지도(Base)는 기본적으로 텍스트가 포함되어 있음
     }
-  }, [mapType]);
+  }, [mapType, showLabels]);
 
   // 🧭 지도 시점 보정 및 가이드 표시
   useEffect(() => {
