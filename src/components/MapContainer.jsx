@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 const API_KEY = import.meta.env.VITE_VWORLD_API_KEY || '';
 const IS_KEY_SET = API_KEY && API_KEY !== 'YOUR_VWORLD_API_KEY_HERE' && API_KEY.trim() !== '';
 
-export default function MapContainer({ coord, radius, features, onMapDoubleClick }) {
+const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, ref) => {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
 
@@ -185,9 +185,67 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     });
   }, [features]);
 
+  useImperativeHandle(ref, () => ({
+    async captureTopViewImage(filename) {
+      if (!viewerRef.current || !coord) return;
+      const viewer = viewerRef.current;
+
+      // 1. 기존 엔티티 백업 후 투명화 (건물, 도로, 라인 등 전부 숨김)
+      const entities = viewer.entities.values;
+      const visibilityStates = entities.map(e => e.show);
+      entities.forEach(e => { e.show = false; });
+
+      // 2. 현재 카메라 시점 백업
+      const cachedCamera = {
+        position: viewer.camera.position.clone(),
+        heading: viewer.camera.heading,
+        pitch: viewer.camera.pitch,
+        roll: viewer.camera.roll,
+      };
+
+      // 3. 순수 위성지도 탑 뷰(Top-Down) 설정 (반경을 고려해 고도 확보)
+      const altitude = radius * 3000;
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, altitude),
+        orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
+      });
+
+      // 4. 고해상도 타일 로딩 대기 후 캡처 실시
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            viewer.render();
+            // 최고 해상도로 캡처
+            const dataUrl = viewer.scene.canvas.toDataURL('image/jpeg', 1.0);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            link.click();
+            resolve();
+          } catch(e) {
+            reject(e);
+          } finally {
+            // 5. 모든 엔티티 및 카메라 복구
+            entities.forEach((e, i) => { e.show = visibilityStates[i]; });
+            viewer.camera.setView({
+              destination: cachedCamera.position,
+              orientation: {
+                heading: cachedCamera.heading,
+                pitch: cachedCamera.pitch,
+                roll: cachedCamera.roll
+              }
+            });
+          }
+        }, 1500); // 1.5초(타일 로딩 시간)
+      });
+    }
+  }));
+
   return (
     <div style={{ width: '100%', height: '100%', background: '#000' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );
-}
+});
+
+export default MapContainer;

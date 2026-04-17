@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import SearchControl from './components/SearchControl';
 import MapContainer from './components/MapContainer';
 import { generateObjFile, downloadObjFile } from './utils/objConverter';
 import { geocodeAddress, fetchComplexData, reverseGeocode } from './utils/vworldApi';
 
 function App() {
+  const mapRef = useRef(null);
   const [address, setAddress] = useState('');
   const [coord, setCoord] = useState(null); 
   const [radius, setRadius] = useState(0.5);
@@ -63,17 +64,13 @@ function App() {
     downloadObjFile(objStr, `${safeName}_3D_Full.obj`);
   }, [data, coord, address]);
 
-  const handleImageDownload = useCallback(() => {
+  const handleImageDownload = useCallback(async () => {
     try {
-      const canvas = document.querySelector('.cesium-widget canvas');
-      if (!canvas) throw new Error('지도 화면을 찾을 수 없습니다.');
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-      const link = document.createElement('a');
-      link.href = dataUrl;
+      if (!mapRef.current) throw new Error('지도 화면을 찾을 수 없습니다.');
+      pushLog('건물 숨김 & 탑 뷰(Top View) 캡처 준비 중...', 'info', '📸');
       const safeName = (address || 'vworld').replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
-      link.download = `${safeName}_Satellite.jpg`;
-      link.click();
-      pushLog('위성사진 JPG 다운로드 완료', 'success', '📸');
+      await mapRef.current.captureTopViewImage(`${safeName}_TopView.jpg`);
+      pushLog('순수 위성사진 고해상도 다운로드 완료', 'success', '📸');
     } catch (e) {
       pushLog('위성사진 캡처 실패', 'error', '❌');
       console.error(e);
@@ -115,6 +112,7 @@ function App() {
       </aside>
       <main className="map-area">
         <MapContainer 
+          ref={mapRef}
           coord={coord} 
           radius={radius} 
           features={data} 
