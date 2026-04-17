@@ -61,14 +61,13 @@ export default function SearchControl({
 
       {/* ── 주소 설정 ── */}
       <div className="sidebar-section">
-        <div className="section-label">📍 주소 설정</div>
+        <div className="section-label">■ 주소 설정</div>
         <div
           className={`address-input-box ${address ? 'selected' : ''}`}
           onClick={handleOpenPostcode}
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && handleOpenPostcode()}
         >
-          <span className="address-icon">🏢</span>
           <div className="address-text">
             {address ? (
               <>
@@ -80,12 +79,10 @@ export default function SearchControl({
                 )}
               </>
             ) : (
-              <div className="address-placeholder">클릭하여 주소 검색</div>
+              <div className="address-placeholder">주소를 선택하세요</div>
             )}
           </div>
-          <span style={{ color: 'var(--color-text-faint)', fontSize: '12px' }}>▼</span>
         </div>
-        <div className="instruction-text">💡 주소를 입력하거나 지도를 더블클릭하세요!</div>
         <button className="btn-search-address" onClick={handleOpenPostcode}>
           🔍 주소 검색 (다음 API)
         </button>
@@ -93,7 +90,7 @@ export default function SearchControl({
 
       {/* ── 반경 설정 ── */}
       <div className="sidebar-section">
-        <div className="section-label">📐 추출 반경</div>
+        <div className="section-label">■ 추출 반경</div>
         <div className="slider-container">
           <div className="slider-header">
             <span className="slider-title">반경 (Radius)</span>
@@ -115,7 +112,7 @@ export default function SearchControl({
       {/* ── 좌표 정보 ── */}
       {coord && (
         <div className="sidebar-section">
-          <div className="section-label">🌐 좌표 정보</div>
+          <div className="section-label">■ 좌표 정보</div>
           <div className="coord-card">
             <div className="coord-grid">
               <div className="coord-item">
@@ -133,7 +130,7 @@ export default function SearchControl({
 
       {/* ── 실행 ── */}
       <div className="sidebar-section">
-        <div className="section-label">🚀 실행</div>
+        <div className="section-label">■ 실행</div>
         <button
           className="btn-primary"
           onClick={onFetch}
@@ -154,11 +151,10 @@ export default function SearchControl({
 
       {/* ── 로그 ── */}
       <div className="sidebar-section" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        <div className="section-label">📝 진행 로그</div>
+        <div className="section-label">■ 진행 로그</div>
         <div className="log-container">
           {logs.map((log) => (
             <div key={log.id} className={`log-item ${log.type}`}>
-              <span className="log-icon">{log.icon}</span>
               <div className="log-content">
                 <span className="log-time">{log.time}</span>
                 <span className="log-message">{log.message}</span>

@@ -83,16 +83,24 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     };
   }, []);
 
+  // 🧭 지도 시점 보정 및 가이드 표시
   useEffect(() => {
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
     
-    // 사각형 영역이 화면 중앙에 오도록 시점 정밀 보정 (남쪽으로 더 이동 및 고도 상향)
+    // 💡 [사용자 요청] 남동쪽에서 북서쪽을 바라보는 시점 보정
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat - 0.02, 2500),
+      // 1. 위치 보정: 위도(lat)를 더 낮추고(남쪽), 경도(lng)를 더 높임(동쪽)
+      destination: Cesium.Cartesian3.fromDegrees(
+        coord.lng + 0.02, // 동쪽으로 이동
+        coord.lat - 0.03, // 남쪽으로 더 이동
+        3000              // 고도는 조금 더 높여서 넓은 영역 확보
+      ),
       orientation: { 
-        heading: 0, 
-        pitch: Cesium.Math.toRadians(-35), 
+        // 2. 방향(Heading): 약 315도 ~ 330도 (북서쪽 방향을 바라봄)
+        heading: Cesium.Math.toRadians(320), 
+        // 3. 기울기(Pitch): 지면을 비스듬히 내려다봄
+        pitch: Cesium.Math.toRadians(-30), 
         roll: 0 
       }
     });
@@ -102,7 +110,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
       .filter(e => e.rectangle)
       .forEach(e => viewer.entities.remove(e));
 
-    // BBOX 기반 사각형 영역 계산 (vworldApi 로직과 동일)
+    // BBOX 기반 사각형 영역 계산
     const latDeg = radius / 111.32;
     const lngDeg = radius / (111.32 * Math.cos(coord.lat * (Math.PI / 180)));
     const west = coord.lng - lngDeg;
@@ -122,57 +130,60 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     });
   }, [coord, radius]);
 
-  // 🏛️ 건물 데이터 3D 시각화 (에러 방지 강화)
+  // 🏛️ 건물 및 도로 3D 시각화
   useEffect(() => {
-    if (!viewerRef.current || !features || features.length === 0) return;
+    if (!viewerRef.current || !features) return;
     const viewer = viewerRef.current;
+    const { buildings = [], roads = [] } = features;
 
-    // 기존 건물들만 삭제
+    // 기존 데이터 삭제
     viewer.entities.values
-      .filter(e => e.polygon)
+      .filter(e => e.polygon || e.polyline)
       .forEach(e => viewer.entities.remove(e));
 
-    features.forEach((f) => {
+    // 1. 건물 렌더링
+    buildings.forEach((f) => {
       try {
         const geom = f.geometry;
         if (!geom || !geom.coordinates) return;
-
         const props = f.properties || {};
-        const height = parseFloat(props.A18 || props.bld_hgt || (props.gro_flo_co * 3.5) || 12);
+        const height = parseFloat(props.bld_hgt || 12);
 
-        // Polygon 또는 MultiPolygon 대응 및 유효성 검사 강화
-        let rawCoords = [];
-        if (geom.type === 'Polygon') {
-          rawCoords = geom.coordinates[0];
-        } else if (geom.type === 'MultiPolygon') {
-          rawCoords = geom.coordinates[0][0];
-        }
+        let polygonCoords = [];
+        if (geom.type === 'Polygon') polygonCoords = geom.coordinates[0].flat();
+        else if (geom.type === 'MultiPolygon') polygonCoords = geom.coordinates[0][0].flat();
 
-        // 1차원 배열로 펼치기 및 숫자 유효성 검사
-        const polygonCoords = rawCoords
-          .flat()
-          .map(Number)
-          .filter(n => !isNaN(n));
-
-        // 좌표는 반드시 경도, 위도 쌍(2개씩)이어야 하므로 짝수여야 함
-        if (polygonCoords.length < 6 || polygonCoords.length % 2 !== 0) {
-          console.warn('부적절한 좌표 배열 스킵:', polygonCoords.length);
-          return;
-        }
+        if (polygonCoords.length < 6) return;
 
         viewer.entities.add({
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray(polygonCoords),
             extrudedHeight: height,
-            material: Cesium.Color.fromCssColorString('#ffffff').withAlpha(0.6),
+            material: Cesium.Color.WHITE.withAlpha(0.5),
             outline: true,
             outlineColor: Cesium.Color.BLACK.withAlpha(0.3),
           },
           name: props.BLD_NM || '건물',
         });
-      } catch (err) {
-        console.warn('건물 렌더링 스킵:', err.message);
-      }
+      } catch (e) {}
+    });
+
+    // 2. 도로 렌더링 추가
+    roads.forEach((f) => {
+      try {
+        const geom = f.geometry;
+        if (!geom || !geom.coordinates) return;
+        if (geom.type === 'LineString') {
+          viewer.entities.add({
+            polyline: {
+              positions: Cesium.Cartesian3.fromDegreesArray(geom.coordinates.flat()),
+              width: 3,
+              material: Cesium.Color.YELLOW.withAlpha(0.8),
+              clampToGround: true
+            }
+          });
+        }
+      } catch (e) {}
     });
   }, [features]);
 

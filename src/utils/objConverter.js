@@ -105,33 +105,37 @@ export const generateObjFile = (data, center) => {
     lines.push('\ng Roads');
     roads.forEach((feature) => {
       const geom = feature.geometry;
-      if (!geom || geom.type !== 'LineString' || !geom.coordinates) return;
-      const coords = geom.coordinates;
+      if (!geom || !geom.coordinates) return;
       const roadWidth = 6.0; // 6미터 폭
 
-      for (let i = 0; i < coords.length - 1; i++) {
-        const x1 = (coords[i][0] - originLng) * degToMeterLng;
-        const z1 = -(coords[i][1] - originLat) * degToMeterLat;
-        const x2 = (coords[i+1][0] - originLng) * degToMeterLng;
-        const z2 = -(coords[i+1][1] - originLat) * degToMeterLat;
+      // LineString과 MultiLineString 모두 대응 가능하도록 배열화
+      const lineGroup = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
 
-        const dx = x2 - x1;
-        const dz = z2 - z1;
-        const len = Math.sqrt(dx*dx + dz*dz);
-        if (len === 0) continue;
+      lineGroup.forEach((coords) => {
+        for (let i = 0; i < coords.length - 1; i++) {
+          const x1 = (coords[i][0] - originLng) * degToMeterLng;
+          const z1 = -(coords[i][1] - originLat) * degToMeterLat;
+          const x2 = (coords[i+1][0] - originLng) * degToMeterLng;
+          const z2 = -(coords[i+1][1] - originLat) * degToMeterLat;
 
-        const nx = (-dz / len) * (roadWidth / 2);
-        const nz = (dx / len) * (roadWidth / 2);
+          const dx = x2 - x1;
+          const dz = z2 - z1;
+          const len = Math.sqrt(dx*dx + dz*dz);
+          if (len < 0.1) continue;
 
-        const h = 0.05; // 지면 위 5cm
-        lines.push(`v ${(x1 - nx).toFixed(4)} ${h} ${(z1 - nz).toFixed(4)}`);
-        lines.push(`v ${(x1 + nx).toFixed(4)} ${h} ${(z1 + nz).toFixed(4)}`);
-        lines.push(`v ${(x2 + nx).toFixed(4)} ${h} ${(z2 + nz).toFixed(4)}`);
-        lines.push(`v ${(x2 - nx).toFixed(4)} ${h} ${(z2 - nz).toFixed(4)}`);
+          const nx = (-dz / len) * (roadWidth / 2);
+          const nz = (dx / len) * (roadWidth / 2);
 
-        lines.push(`f ${vertexCount} ${vertexCount+1} ${vertexCount+2} ${vertexCount+3}`);
-        vertexCount += 4;
-      }
+          const h = 0.05; // 지면 위 5cm
+          lines.push(`v ${(x1 - nx).toFixed(4)} ${h} ${(z1 - nz).toFixed(4)}`);
+          lines.push(`v ${(x1 + nx).toFixed(4)} ${h} ${(z1 + nz).toFixed(4)}`);
+          lines.push(`v ${(x2 + nx).toFixed(4)} ${h} ${(z2 + nz).toFixed(4)}`);
+          lines.push(`v ${(x2 - nx).toFixed(4)} ${h} ${(z2 - nz).toFixed(4)}`);
+
+          lines.push(`f ${vertexCount} ${vertexCount+1} ${vertexCount+2} ${vertexCount+3}`);
+          vertexCount += 4;
+        }
+      });
     });
   }
 

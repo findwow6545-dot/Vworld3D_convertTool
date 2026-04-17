@@ -99,7 +99,7 @@ function App() {
         <MapContainer 
           coord={coord} 
           radius={radius} 
-          features={data.buildings} 
+          features={data} 
           onMapDoubleClick={handleMapDoubleClick}
         />
       </main>
