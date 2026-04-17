@@ -106,15 +106,61 @@ body {
 .sidebar-section { padding: 25px 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
 .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-accent); font-weight: 700; margin-bottom: 15px; }
 
-/* 버튼 스타일 */
-.btn-primary { 
-  width: 100%; padding: 15px; border-radius: 12px; border: none;
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
-  color: #000; font-weight: 800; cursor: pointer; transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+/* 버튼 스타일 고도화 */
+.btn-primary, .btn-search-address, .btn-download {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  margin-bottom: 10px;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5); }
-.btn-primary:active { transform: translateY(0); }
+
+.btn-search-address {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.btn-search-address:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.5);
+}
+
+.btn-download {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-download:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+}
+
+.btn-primary:disabled, .btn-download:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
 
 /* 고정 카피라이트 스타일 */
 .fixed-copyright {

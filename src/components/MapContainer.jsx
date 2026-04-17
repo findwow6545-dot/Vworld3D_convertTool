@@ -86,24 +86,35 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
   useEffect(() => {
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
+    
+    // 줌인 시점 중앙 보정 (오프셋 없이 정중앙에 위치)
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat - 0.005, 1200),
-      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-45), roll: 0 }
+      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, 1000), // 높이 1000m에서 정적으로 내려다봄
+      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
     });
     
-    // 이전 가이드 엔티티만 삭제
+    // 이전 가이드 엔티티 삭제
     viewer.entities.values
-      .filter(e => e.ellipse)
+      .filter(e => e.rectangle)
       .forEach(e => viewer.entities.remove(e));
 
+    // BBOX 기반 사각형 영역 계산 (vworldApi 로직과 동일)
+    const latDeg = radius / 111.32;
+    const lngDeg = radius / (111.32 * Math.cos(coord.lat * (Math.PI / 180)));
+    const west = coord.lng - lngDeg;
+    const south = coord.lat - latDeg;
+    const east = coord.lng + lngDeg;
+    const north = coord.lat + latDeg;
+
     viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat),
-      ellipse: {
-        semiMinorAxis: radius * 1000, semiMajorAxis: radius * 1000,
-        material: Cesium.Color.RED.withAlpha(0.2),
-        outline: true, outlineColor: Cesium.Color.RED,
-        outlineWidth: 3.0
+      rectangle: {
+        coordinates: Cesium.Rectangle.fromDegrees(west, south, east, north),
+        material: Cesium.Color.RED.withAlpha(0.1),
+        outline: true,
+        outlineColor: Cesium.Color.RED,
+        outlineWidth: 4.0
       },
+      name: '추출 영역'
     });
   }, [coord, radius]);
 
