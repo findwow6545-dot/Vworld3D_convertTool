@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import SearchControl from './components/SearchControl';
 import MapContainer from './components/MapContainer';
 import { generateObjFile, downloadObjFile } from './utils/objConverter';
-import { geocodeAddress, fetchComplexData } from './utils/vworldApi';
+import { geocodeAddress, fetchComplexData, reverseGeocode } from './utils/vworldApi';
 
 function App() {
   const [address, setAddress] = useState('');
@@ -23,6 +23,17 @@ function App() {
     setData({ buildings: [], roads: [] });
     pushLog(`위치 선택: ${data.address}`, 'success', '📍');
   }, [pushLog]);
+
+  const handleMapDoubleClick = useCallback(async (lat, lng) => {
+    if (isCollecting) return;
+    pushLog('지도에서 위치 선택 중...', 'info', '🌍');
+    try {
+      const result = await reverseGeocode(lat, lng);
+      handleAddressSelect(result);
+    } catch (err) {
+      pushLog(`위치 정보 획득 실패: ${err.message}`, 'error', '❌');
+    }
+  }, [isCollecting, handleAddressSelect, pushLog]);
 
   const handleFetch = useCallback(async () => {
     if (!coord) return;
@@ -78,7 +89,12 @@ function App() {
         </div>
       </aside>
       <main className="map-area">
-        <MapContainer coord={coord} radius={radius} features={data.buildings} />
+        <MapContainer 
+          coord={coord} 
+          radius={radius} 
+          features={data.buildings} 
+          onMapDoubleClick={handleMapDoubleClick}
+        />
       </main>
     </div>
   );

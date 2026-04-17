@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 
 const RADIUS_MIN = 0.1;
-const RADIUS_MAX = 3.0;
+const RADIUS_MAX = 1.0;
 const RADIUS_STEP = 0.1;
 
 export default function SearchControl({

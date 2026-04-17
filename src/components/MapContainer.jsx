@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 const API_KEY = import.meta.env.VITE_VWORLD_API_KEY || '';
 const IS_KEY_SET = API_KEY && API_KEY !== 'YOUR_VWORLD_API_KEY_HERE' && API_KEY.trim() !== '';
 
-export default function MapContainer({ coord, radius, features }) {
+export default function MapContainer({ coord, radius, features, onMapDoubleClick }) {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
 
@@ -63,9 +63,24 @@ export default function MapContainer({ coord, radius, features }) {
       }
     });
 
+    // 3. 더블 클릭 이벤트 핸들러 추가
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction((movement) => {
+      const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+      if (cartesian) {
+        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        const lng = Cesium.Math.toDegrees(cartographic.longitude);
+        const lat = Cesium.Math.toDegrees(cartographic.latitude);
+        onMapDoubleClick?.(lat, lng);
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
     viewerRef.current = viewer;
 
-    return () => { if (viewer && !viewer.isDestroyed()) viewer.destroy(); };
+    return () => { 
+      handler.destroy();
+      if (viewer && !viewer.isDestroyed()) viewer.destroy(); 
+    };
   }, []);
 
   useEffect(() => {

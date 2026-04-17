@@ -30,6 +30,27 @@ export async function geocodeAddress(address) {
   throw new Error(res.data?.response?.error?.text || '주소 변환 실패');
 }
 
+export async function reverseGeocode(lat, lng) {
+  const res = await axios.get(`${BASE_URL}/address`, {
+    params: {
+      service: 'address',
+      request: 'getaddress',
+      key: API_KEY,
+      point: `${lng},${lat}`,
+      type: 'both',
+      format: 'json',
+      crs: 'epsg:4326',
+      domain: window.location.hostname
+    },
+  });
+
+  if (res.data?.response?.status === 'OK') {
+    const address = res.data.response.result[0].text;
+    return { lat, lng, address };
+  }
+  throw new Error(res.data?.response?.error?.text || '주소 정보를 찾을 수 없습니다.');
+}
+
 export async function fetchComplexData(lat, lng, radiusKm, onProgress) {
   const { latDeg, lngDeg } = kmToDegrees(radiusKm, lat);
   const bbox = `BOX(${(lng - lngDeg).toFixed(6)},${(lat - latDeg).toFixed(6)},${(lng + lngDeg).toFixed(6)},${(lat + latDeg).toFixed(6)})`;
