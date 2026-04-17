@@ -291,10 +291,10 @@ body {
 }
 
 .map-selector-btn.active {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* 플로팅 버튼 (사이드바 닫혔을 때) */

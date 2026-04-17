@@ -58,7 +58,7 @@ export default function SearchControl({
       <div className="sidebar-header">
         <div className="badge">LAELAB 3D TOOL</div>
         <h1 className="sidebar-title">3D 건물 DATA 추출 도구</h1>
-        <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
+        <p className="sidebar-subtitle">주소 OR 더블클릭 검색 → 건물데이터수집 → OBJ 다운로드</p>
         <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
           © 국립목포대학교 조경학과 조경표현연구실
         </div>
@@ -82,12 +82,12 @@ export default function SearchControl({
           </button>
         </div>
         <div style={{ marginTop: '10px' }}>
-          <button 
+          <button
             className={`map-selector-btn ${!showLabels ? 'active' : ''}`}
             onClick={() => onShowLabelsChange(!showLabels)}
-            style={{ width: '100%', fontSize: '11px', background: !showLabels ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)' }}
+            style={{ width: '100%', fontSize: '11px', background: !showLabels ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255,255,255,0.05)' }}
           >
-            {showLabels ? '🔓 정보 텍스트 표시 중' : '🔒 정보 텍스트 숨김'}
+            {showLabels ? 'ON 정보 텍스트 표시 중' : 'OFF 정보 텍스트 숨김'}
           </button>
         </div>
       </div>
