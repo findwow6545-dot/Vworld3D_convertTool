@@ -87,12 +87,12 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
     
-    // 이미지와 유사한 입체적인 3D 조감도 시점 적용
+    // 사각형 영역이 화면 중앙에 오도록 시점 정밀 보정 (남쪽으로 더 이동 및 고도 상향)
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat - 0.012, 1600), // 남쪽에서 위로 바라보도록 오프셋
+      destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat - 0.02, 2500),
       orientation: { 
         heading: 0, 
-        pitch: Cesium.Math.toRadians(-35), // 입체감을 위한 기울기
+        pitch: Cesium.Math.toRadians(-35), 
         roll: 0 
       }
     });
