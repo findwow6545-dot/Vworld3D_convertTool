@@ -89,46 +89,6 @@ export default function SearchControl({
         </button>
       </div>
 
-      {/* ── 반경 설정 ── */}
-      <div className="sidebar-section">
-        <div className="section-label">■ 추출 반경</div>
-        <div className="slider-container">
-          <div className="slider-header">
-            <span className="slider-title">반경 (Radius)</span>
-            <div className="slider-value">{radius.toFixed(1)}<span>km</span></div>
-          </div>
-          <input
-            type="range"
-            className="range-input"
-            min={RADIUS_MIN}
-            max={RADIUS_MAX}
-            step={RADIUS_STEP}
-            value={radius}
-            onChange={(e) => setRadius(parseFloat(e.target.value))}
-            style={{ background: sliderBg }}
-          />
-        </div>
-      </div>
-
-      {/* ── 좌표 정보 ── */}
-      {coord && (
-        <div className="sidebar-section">
-          <div className="section-label">■ 좌표 정보</div>
-          <div className="coord-card">
-            <div className="coord-grid">
-              <div className="coord-item">
-                <div className="coord-item-label">LATITUDE (위도)</div>
-                <div className="coord-item-value">{coord.lat.toFixed(6)}°</div>
-              </div>
-              <div className="coord-item">
-                <div className="coord-item-label">LONGITUDE (경도)</div>
-                <div className="coord-item-value">{coord.lng.toFixed(6)}°</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── 실행 ── */}
       <div className="sidebar-section">
         <div className="section-label">■ 실행</div>
@@ -154,6 +114,28 @@ export default function SearchControl({
           </div>
         )}
       </div>
+
+      {/* ── 반경 설정 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">■ 추출 반경</div>
+        <div className="slider-container">
+          <div className="slider-header">
+            <span className="slider-title">반경 (Radius)</span>
+            <div className="slider-value">{radius.toFixed(1)}<span>km</span></div>
+          </div>
+          <input
+            type="range"
+            className="range-input"
+            min={RADIUS_MIN}
+            max={RADIUS_MAX}
+            step={RADIUS_STEP}
+            value={radius}
+            onChange={(e) => setRadius(parseFloat(e.target.value))}
+            style={{ background: sliderBg }}
+          />
+        </div>
+      </div>
+
 
       {/* ── 로그 ── */}
       <div className="sidebar-section" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
