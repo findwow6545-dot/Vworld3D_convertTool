@@ -255,3 +255,81 @@ body {
   width: 100%;
   font-weight: 500;
 }
+
+/* 지도 선택 버튼 스타일 */
+.map-selector-group {
+  display: flex;
+  gap: 10px;
+}
+
+.map-selector-btn {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.map-selector-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.map-selector-btn.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+}
+
+/* 플로팅 버튼 (사이드바 닫혔을 때) */
+.fab-container {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 105;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fab-collect {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #0055ff 0%, #0099ff 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 85, 255, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-collect:hover:not(:disabled) {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 40px rgba(0, 85, 255, 0.6);
+}
+
+.fab-collect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.fab-collect.collecting {
+  animation: fab-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes fab-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 85, 255, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(0, 85, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 85, 255, 0); }
+}

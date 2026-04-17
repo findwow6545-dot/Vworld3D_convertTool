@@ -3,9 +3,10 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 const API_KEY = import.meta.env.VITE_VWORLD_API_KEY || '';
 const IS_KEY_SET = API_KEY && API_KEY !== 'YOUR_VWORLD_API_KEY_HERE' && API_KEY.trim() !== '';
 
-const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, ref) => {
+const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, mapType }, ref) => {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
+  const imageryLayersRef = useRef({});
 
   const playSuccessSound = () => {
     try {
@@ -24,7 +25,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. 기본 배경 레이어 (OSM)
+    // 1. 초기 뷰어 설정
     const viewer = new Cesium.Viewer(containerRef.current, {
       imageryProvider: new Cesium.OpenStreetMapImageryProvider({
         url: 'https://a.tile.openstreetmap.org/'
@@ -35,28 +36,36 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
       contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
 
-    // 2. 브이월드 레이어 (성공 시 중첩)
+    // 2. 브이월드 레이어 사전 생성
     if (IS_KEY_SET) {
-      viewer.imageryLayers.addImageryProvider(
-        new Cesium.UrlTemplateImageryProvider({
-          url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Satellite/{z}/{y}/{x}.jpeg`,
-          maximumLevel: 18,
-          credit: '© VWORLD'
-        })
-      );
-      viewer.imageryLayers.addImageryProvider(
-        new Cesium.UrlTemplateImageryProvider({
-          url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Hybrid/{z}/{y}/{x}.png`,
-          maximumLevel: 18,
-        })
-      );
+      imageryLayersRef.current.satellite = new Cesium.UrlTemplateImageryProvider({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Satellite/{z}/{y}/{x}.jpeg`,
+        maximumLevel: 18,
+        credit: '© VWORLD'
+      });
+      imageryLayersRef.current.hybrid = new Cesium.UrlTemplateImageryProvider({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Hybrid/{z}/{y}/{x}.png`,
+        maximumLevel: 18,
+      });
+      imageryLayersRef.current.base = new Cesium.UrlTemplateImageryProvider({
+        url: `https://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`,
+        maximumLevel: 18,
+      });
+
+      // 초기 레이어 설정
+      if (mapType === 'satellite') {
+        viewer.imageryLayers.addImageryProvider(imageryLayersRef.current.satellite);
+        viewer.imageryLayers.addImageryProvider(imageryLayersRef.current.hybrid);
+      } else {
+        viewer.imageryLayers.addImageryProvider(imageryLayersRef.current.base);
+      }
     }
 
     viewer.scene.globe.showGroundAtmosphere = false;
 
-    // 🇰🇷 초기 시점: 대한민국이 한눈에 들어오는 높이로 설정
+    // 🇰🇷 초기 시점: 서울특별시 전체가 보이는 뷰 (37.5665, 126.9780)
     viewer.camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(127.5, 36.5, 1500000), // 경도, 위도, 높이(미터)
+      destination: Cesium.Cartesian3.fromDegrees(126.9780, 37.5665, 45000), // 서울 상공 45km
       orientation: {
         heading: 0,
         pitch: Cesium.Math.toRadians(-90),
@@ -83,6 +92,26 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
       if (viewer && !viewer.isDestroyed()) viewer.destroy();
     };
   }, []);
+
+  // 🗺️ 지도 타입 변경 감지 (위성/일반)
+  useEffect(() => {
+    if (!viewerRef.current || !IS_KEY_SET) return;
+    const viewer = viewerRef.current;
+    const layers = imageryLayersRef.current;
+
+    viewer.imageryLayers.removeAll();
+    // OSM 베이스는 항상 깔아둠 (안전장치)
+    viewer.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({
+      url: 'https://a.tile.openstreetmap.org/'
+    }));
+
+    if (mapType === 'satellite') {
+      viewer.imageryLayers.addImageryProvider(layers.satellite);
+      viewer.imageryLayers.addImageryProvider(layers.hybrid);
+    } else {
+      viewer.imageryLayers.addImageryProvider(layers.base);
+    }
+  }, [mapType]);
 
   // 🧭 지도 시점 보정 및 가이드 표시
   useEffect(() => {

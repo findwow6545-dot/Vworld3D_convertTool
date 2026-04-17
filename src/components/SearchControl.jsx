@@ -18,6 +18,8 @@ export default function SearchControl({
   geocodeAddress,
   isOpen,
   setIsOpen,
+  mapType,
+  onMapTypeChange,
 }) {
   const logEndRef = useRef(null);
 
@@ -57,6 +59,25 @@ export default function SearchControl({
         <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
         <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
           © 국립목포대학교 조경학과 조경표현연구실
+        </div>
+      </div>
+
+      {/* ── 지도 설정 ── */}
+      <div className="sidebar-section">
+        <div className="section-label">■ MAP SETTINGS</div>
+        <div className="map-selector-group">
+          <button 
+            className={`map-selector-btn ${mapType === 'satellite' ? 'active' : ''}`}
+            onClick={() => onMapTypeChange('satellite')}
+          >
+            🛰️ 위성사진
+          </button>
+          <button 
+            className={`map-selector-btn ${mapType === 'street' ? 'active' : ''}`}
+            onClick={() => onMapTypeChange('street')}
+          >
+            🗺️ 일반지도
+          </button>
         </div>
       </div>
 

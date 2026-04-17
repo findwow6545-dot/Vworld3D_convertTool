@@ -13,6 +13,7 @@ function App() {
   const [isCollecting, setIsCollecting] = useState(false);
   const [logs, setLogs] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [mapType, setMapType] = useState('satellite'); // satellite, street
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
@@ -89,6 +90,19 @@ function App() {
         {isSidebarOpen ? '◀' : '☰'}
       </button>
 
+      {!isSidebarOpen && (
+        <div className="fab-container">
+          <button 
+            className={`fab-collect ${isCollecting ? 'collecting' : ''}`} 
+            onClick={handleFetch}
+            disabled={!coord || isCollecting}
+            title="데이터 수집 실행"
+          >
+            {isCollecting ? '📡' : '🏗️'}
+          </button>
+        </div>
+      )}
+
       <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <SearchControl 
           coord={coord}
@@ -104,6 +118,8 @@ function App() {
           geocodeAddress={geocodeAddress}
           isOpen={isSidebarOpen}
           setIsOpen={setIsSidebarOpen}
+          mapType={mapType}
+          onMapTypeChange={setMapType}
         />
 
         <div style={{ padding: '20px', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
@@ -117,6 +133,7 @@ function App() {
           radius={radius} 
           features={data} 
           onMapDoubleClick={handleMapDoubleClick}
+          mapType={mapType}
         />
       </main>
     </div>
