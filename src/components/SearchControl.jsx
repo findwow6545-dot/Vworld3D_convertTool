@@ -35,7 +35,7 @@ export default function SearchControl({
         const fullAddress = data.roadAddress || data.address;
         try {
           const result = await geocodeAddress(fullAddress);
-          onAddressSelect(result); 
+          onAddressSelect(result);
         } catch (err) {
           console.error('주소 변환 오류:', err);
           alert(`주소 정보를 가져오지 못했습니다: ${err.message}`);
@@ -51,13 +51,13 @@ export default function SearchControl({
   return (
     <div className="search-control">
       <div className="sidebar-header">
-          <div className="badge">VWORLD 3D TOOL</div>
-          <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
-          <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
-          <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
-            © 국립목포대학교 조경학과 조경표현연구실
-          </div>
+        <div className="badge">VWORLD 3D TOOL</div>
+        <h1 className="sidebar-title">3D 건물 DATA 추출 도구</h1>
+        <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
+        <div style={{ marginTop: '10px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'left' }}>
+          © 국립목포대학교 조경학과 조경표현연구실
         </div>
+      </div>
 
       {/* ── 주소 설정 ── */}
       <div className="sidebar-section">
@@ -79,7 +79,7 @@ export default function SearchControl({
                 )}
               </>
             ) : (
-              <div className="address-placeholder">주소를 선택하세요</div>
+              <div className="address-placeholder">주소를 입력하세요</div>
             )}
           </div>
         </div>
