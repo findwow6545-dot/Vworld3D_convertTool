@@ -18,7 +18,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
       g.gain.setValueAtTime(0.05, audioContext.currentTime);
       g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
       o.start(); o.stop(audioContext.currentTime + 0.5);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -77,9 +77,9 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
 
     viewerRef.current = viewer;
 
-    return () => { 
+    return () => {
       handler.destroy();
-      if (viewer && !viewer.isDestroyed()) viewer.destroy(); 
+      if (viewer && !viewer.isDestroyed()) viewer.destroy();
     };
   }, []);
 
@@ -87,21 +87,17 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
   useEffect(() => {
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
-    
+
     // 💡 두 번째 이미지와 같이 수집 영역이 화면 정중앙에 오도록 시점 보정 (고도 상향 및 각도 최적화)
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(
-        coord.lng + 0.015, // 동쪽 오프셋 조정
-        coord.lat - 0.035, // 남쪽으로 더 물러나 중앙 확보
-        3000              // 시야 확보를 위해 고도 3000m 적용
-      ),
+      destination: Cesium.Cartesian3.fromDegrees(coord.lng + 0.015, coord.lat - 0.035, 3000),
       orientation: { 
-        heading: Cesium.Math.toRadians(340), // 북북서 방향을 바라보며 사각형을 중앙에 배치
-        pitch: Cesium.Math.toRadians(-35),    // 조감도 최적 각도
+        heading: Cesium.Math.toRadians(340), 
+        pitch: Cesium.Math.toRadians(-35),
         roll: 0 
       }
     });
-    
+
     // 이전 가이드 엔티티 삭제
     viewer.entities.values
       .filter(e => e.rectangle)
@@ -162,7 +158,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
           },
           name: props.BLD_NM || '건물',
         });
-      } catch (e) {}
+      } catch (e) { }
     });
 
     // 2. 도로 렌더링 추가
@@ -180,7 +176,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
             }
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     });
   }, [features]);
 
