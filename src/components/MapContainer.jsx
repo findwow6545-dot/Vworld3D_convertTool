@@ -88,19 +88,16 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
     
-    // 💡 [사용자 요청] 남동쪽에서 북서쪽을 바라보는 시점 보정
+    // 💡 수집 영역이 사이드바를 제외한 지도 화면 중앙에 오도록 오프셋 정밀 보정
     viewer.camera.flyTo({
-      // 1. 위치 보정: 위도(lat)를 더 낮추고(남쪽), 경도(lng)를 더 높임(동쪽)
       destination: Cesium.Cartesian3.fromDegrees(
-        coord.lng + 0.02, // 동쪽으로 이동
-        coord.lat - 0.03, // 남쪽으로 더 이동
-        3000              // 고도는 조금 더 높여서 넓은 영역 확보
+        coord.lng + 0.01, // 동쪽 오프셋을 줄여서 대상지를 오른쪽으로 이동
+        coord.lat - 0.025, // 남쪽 오프셋 조정
+        2200              // 적절한 고도 확보
       ),
       orientation: { 
-        // 2. 방향(Heading): 약 315도 ~ 330도 (북서쪽 방향을 바라봄)
-        heading: Cesium.Math.toRadians(320), 
-        // 3. 기울기(Pitch): 지면을 비스듬히 내려다봄
-        pitch: Cesium.Math.toRadians(-30), 
+        heading: Cesium.Math.toRadians(325), // 대상지를 향하는 정밀 각도
+        pitch: Cesium.Math.toRadians(-35),    // 시원한 조감 피치
         roll: 0 
       }
     });
