@@ -15,7 +15,7 @@ function App() {
 
   const pushLog = useCallback((message, type = 'info', icon = 'ℹ️') => {
     const newLog = { id: Date.now() + Math.random(), time: new Date().toLocaleTimeString(), icon, message, type };
-    setLogs(prev => [...prev.slice(-29), newLog]);
+    setLogs(prev => [...prev.slice(-9), newLog]);
   }, []);
 
   const handleAddressSelect = useCallback((data) => {
@@ -63,6 +63,23 @@ function App() {
     downloadObjFile(objStr, `${safeName}_3D_Full.obj`);
   }, [data, coord, address]);
 
+  const handleImageDownload = useCallback(() => {
+    try {
+      const canvas = document.querySelector('.cesium-widget canvas');
+      if (!canvas) throw new Error('지도 화면을 찾을 수 없습니다.');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      const safeName = (address || 'vworld').replace(/[\\/:*?"<>|]/g, '_').slice(0, 20);
+      link.download = `${safeName}_Satellite.jpg`;
+      link.click();
+      pushLog('위성사진 JPG 다운로드 완료', 'success', '📸');
+    } catch (e) {
+      pushLog('위성사진 캡처 실패', 'error', '❌');
+      console.error(e);
+    }
+  }, [address, pushLog]);
+
   const stats = useMemo(() => ({
     total: data.buildings.length + data.roads.length,
     withHeight: data.buildings.length,
@@ -83,6 +100,7 @@ function App() {
           onAddressSelect={handleAddressSelect}
           onFetch={handleFetch}
           onDownload={handleDownload}
+          onImageDownload={handleImageDownload}
           isCollecting={isCollecting}
           logs={logs}
           stats={stats}

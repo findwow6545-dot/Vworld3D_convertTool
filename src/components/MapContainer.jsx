@@ -32,6 +32,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
       baseLayerPicker: false, geocoder: false, homeButton: false, infoBox: false,
       sceneModePicker: false, selectionIndicator: false, timeline: false,
       navigationHelpButton: false, animation: false, scene3DOnly: true,
+      contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
 
     // 2. 브이월드 레이어 (성공 시 중첩)

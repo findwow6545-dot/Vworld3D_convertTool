@@ -11,6 +11,7 @@ export default function SearchControl({
   onAddressSelect,
   onFetch,
   onDownload,
+  onImageDownload,
   isCollecting,
   logs,
   stats,
@@ -143,9 +144,14 @@ export default function SearchControl({
           )}
         </button>
         {stats.total > 0 && (
-          <button className="btn-download" onClick={onDownload} disabled={isCollecting} style={{ marginTop: '10px' }}>
-            ⬇️ OBJ 파일 다운로드
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+            <button className="btn-download" onClick={onDownload} disabled={isCollecting}>
+              ⬇️ OBJ 파일 다운로드
+            </button>
+            <button className="btn-download" onClick={onImageDownload} disabled={isCollecting} style={{ background: 'rgba(16, 185, 129, 0.3)', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+              📸 위성사진(JPG) 다운로드
+            </button>
+          </div>
         )}
       </div>
 
