@@ -71,6 +71,10 @@ function App() {
 
   return (
     <div className="app-container">
+      <button className={`sidebar-toggle ${isSidebarOpen ? 'open' : 'closed'}`} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+        {isSidebarOpen ? '◀' : '☰'}
+      </button>
+
       <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <SearchControl 
           coord={coord}

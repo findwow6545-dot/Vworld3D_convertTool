@@ -49,13 +49,8 @@ export default function SearchControl({
   const sliderBg = `linear-gradient(to right, var(--color-accent) ${sliderPct}%, rgba(255,255,255,0.1) ${sliderPct}%)`;
 
   return (
-    <>
-      <button className={`sidebar-toggle ${isOpen ? 'open' : 'closed'}`} onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? '◀' : '☰'}
-      </button>
-      
-      <div className="search-control">
-        <div className="sidebar-header">
+    <div className="search-control">
+      <div className="sidebar-header">
           <div className="badge">VWORLD 3D TOOL</div>
           <h1 className="sidebar-title">3D 건물 데이터<br />추출 도구</h1>
           <p className="sidebar-subtitle">주소 검색 → 반경 설정 → OBJ 다운로드</p>
@@ -174,6 +169,5 @@ export default function SearchControl({
         </div>
       </div>
     </div>
-  </>
   );
 }

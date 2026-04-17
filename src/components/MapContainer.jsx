@@ -100,8 +100,9 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
       position: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat),
       ellipse: {
         semiMinorAxis: radius * 1000, semiMajorAxis: radius * 1000,
-        material: Cesium.Color.CYAN.withAlpha(0.05),
-        outline: true, outlineColor: Cesium.Color.CYAN,
+        material: Cesium.Color.RED.withAlpha(0.2),
+        outline: true, outlineColor: Cesium.Color.RED,
+        outlineWidth: 3.0
       },
     });
   }, [coord, radius]);
