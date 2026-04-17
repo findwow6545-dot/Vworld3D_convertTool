@@ -80,12 +80,12 @@ export default function SearchControl({
                 )}
               </>
             ) : (
-              <div className="address-placeholder">주소를 입력하세요</div>
+              <div className="address-placeholder">주소를 입력하거나 지도에서 더블클릭!</>
             )}
           </div>
         </div>
         <button className="btn-search-address" onClick={handleOpenPostcode}>
-          🔍 주소 검색 (다음 API)
+          🔍 주소 검색 (3
         </button>
       </div>
 
@@ -154,5 +154,8 @@ export default function SearchControl({
         </div>
       </div>
     </div>
+  );
+}
+v>
   );
 }
