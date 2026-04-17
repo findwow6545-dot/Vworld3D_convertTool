@@ -1,12 +1,13 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
 
 const API_KEY = import.meta.env.VITE_VWORLD_API_KEY || '';
 const IS_KEY_SET = API_KEY && API_KEY !== 'YOUR_VWORLD_API_KEY_HERE' && API_KEY.trim() !== '';
 
-const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, mapType }, ref) => {
+const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, mapType, showLabels }, ref) => {
   const containerRef = useRef(null);
   const viewerRef = useRef(null);
   const imageryLayersRef = useRef({});
+  const [isViewerReady, setIsViewerReady] = useState(false);
 
   const playSuccessSound = () => {
     try {
@@ -86,6 +87,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, ma
     }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
     viewerRef.current = viewer;
+    setIsViewerReady(true);
 
     return () => {
       handler.destroy();
@@ -95,7 +97,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, ma
 
   // 🗺️ 지도 타입 변경 감지 (위성/일반) 및 정보 텍스트 토글
   useEffect(() => {
-    if (!viewerRef.current || !IS_KEY_SET) return;
+    if (!isViewerReady || !viewerRef.current || !IS_KEY_SET) return;
     const viewer = viewerRef.current;
     const layers = imageryLayersRef.current;
 
@@ -114,7 +116,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick, ma
       viewer.imageryLayers.addImageryProvider(layers.base);
       // 일반 지도(Base)는 기본적으로 텍스트가 포함되어 있음
     }
-  }, [mapType, showLabels]);
+  }, [mapType, showLabels, isViewerReady]);
 
   // 🧭 지도 시점 보정 및 가이드 표시
   useEffect(() => {
