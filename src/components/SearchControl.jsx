@@ -162,8 +162,9 @@ export default function SearchControl({
           {logs.map((log) => (
             <div key={log.id} className={`log-item ${log.type}`}>
               <div className="log-content">
-                <span className="log-time">{log.time}</span>
-                <span className="log-message">{log.message}</span>
+                <span className="log-time" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginRight: '4px' }}>{log.time}</span>
+                <span style={{ marginRight: '4px' }}>{log.icon}</span>
+                <span className="log-message" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)' }}>{log.message}</span>
               </div>
             </div>
           ))}

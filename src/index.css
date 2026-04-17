@@ -221,3 +221,21 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
+
+/* 로그 스타일 매우 작게 조정 */
+.log-message {
+  font-size: 11px !important;
+  color: rgba(255, 255, 255, 0.8);
+}
+.log-time {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 6px;
+}
+.log-item {
+  margin-bottom: 4px;
+}
+.log-content {
+  display: flex;
+  align-items: flex-start;
+}
