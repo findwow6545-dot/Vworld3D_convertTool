@@ -204,8 +204,8 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
       };
 
       // 3. 순수 위성지도 탑 뷰(Top-Down) 설정
-      // 해상도 극대화를 위해 카메라를 가깝게 붙입니다. (화면에 영역이 완전히 들어오도록 고도를 2600으로 상향하여 잘림 방지)
-      const altitude = radius * 2600;
+      // 영역 확장 캡처를 위해 카메라를 더 멀리 둡니다. (영역이 더 넓게 잡히도록 4000 적용)
+      const altitude = radius * 4000;
       viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, altitude),
         orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
@@ -244,32 +244,36 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
             const px = Math.min(nwPixel.x, sePixel.x) * scaleX;
             const py = Math.min(nwPixel.y, sePixel.y) * scaleY;
             
-            // 물리적인 정사각형 픽셀 사이즈 유지 보장
+            // 물리적인 정사각형 픽셀 사이즈 유지 보장 (기준 건물 반경)
             let pw = Math.abs(sePixel.x - nwPixel.x) * scaleX;
             let ph = Math.abs(sePixel.y - nwPixel.y) * scaleY;
-            const cropSize = Math.max(pw, ph); 
+            const baseSize = Math.max(pw, ph); 
 
-            // 중심을 기준으로 완벽한 정사각형(Square) 크롭 영역 재정렬
+            // 건물 영역보다 더 많이 나오게 확장 (예: 1.6배 널찍하게 캡처)
+            const expandFactor = 1.6;
+            const cropSize = baseSize * expandFactor;
+
+            // 중심을 기준으로 확장된 정사각형(Square) 크롭 영역 재정렬
             const cx = px + (pw / 2);
             const cy = py + (ph / 2);
-            const finalPx = cx - (cropSize / 2);
-            const finalPy = cy - (cropSize / 2);
+            const finalPx = Math.floor(cx - (cropSize / 2));
+            const finalPy = Math.floor(cy - (cropSize / 2));
 
-            // 최종 2000x2000 PNG/JPG 저장을 위한 캔버스 생성
+            // 2000px 고정을 해제하고, 추출된 엄청난 크기의 실제 원본 픽셀 크기 적용
             const cropCanvas = document.createElement('canvas');
-            cropCanvas.width = 2000;
-            cropCanvas.height = 2000;
+            cropCanvas.width = cropSize;
+            cropCanvas.height = cropSize;
             const ctx = cropCanvas.getContext('2d');
             
             // 이미지 보간 속성 (고품질)
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = "high";
 
-            // 오리지널 렌더링된 사각형 영역을 2000x2000 픽셀로 강제 리사이징 맵핑
+            // 오리지널 렌더링된 거대 영역을 그대로 리사이징 없이 원상태로 맵핑
             ctx.drawImage(
               viewer.scene.canvas,
-              finalPx, finalPy, cropSize, cropSize,  // Source 영역 (정사각형)
-              0, 0, 2000, 2000                       // Destination (정확히 2000x2000)
+              finalPx, finalPy, cropSize, cropSize,  // Source 영역 (확장된 정사각형)
+              0, 0, cropSize, cropSize               // Destination (최대 원본 크기)
             );
 
             // 최종 JPG 이미지 생성 및 다운로드 (압축률 100%)

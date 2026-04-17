@@ -111,22 +111,23 @@ body {
 /* 사이드바 내부 섹션 스타일 */
 .sidebar-header {
   padding: 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #0055ff 0%, #0099ff 100%);
+  border-bottom: 2px solid #0044cc;
 }
 
 .sidebar-title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 900;
   margin: 10px 0 5px;
-  background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-subtitle {
   font-size: 13px;
-  color: var(--color-text-faint);
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
+  font-weight: 500;
 }
 
 .sidebar-section {
