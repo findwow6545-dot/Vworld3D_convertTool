@@ -152,7 +152,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray(polygonCoords),
             extrudedHeight: height,
-            material: Cesium.Color.WHITE.withAlpha(0.9), // 90% 불투명하게 변경
+            material: Cesium.Color.WHITE, // 투명도 제거 (완전 불투명)
             outline: true,
             outlineColor: Cesium.Color.BLACK.withAlpha(0.4),
           },
