@@ -256,6 +256,17 @@ body {
   font-weight: 500;
 }
 
+.address-main {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.address-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* 지도 선택 버튼 스타일 */
 .map-selector-group {
   display: flex;

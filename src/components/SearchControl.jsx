@@ -66,17 +66,17 @@ export default function SearchControl({
       <div className="sidebar-section">
         <div className="section-label">■ MAP SETTINGS</div>
         <div className="map-selector-group">
-          <button 
+          <button
             className={`map-selector-btn ${mapType === 'satellite' ? 'active' : ''}`}
             onClick={() => onMapTypeChange('satellite')}
           >
-            🛰️ 위성사진
+            위성사진
           </button>
-          <button 
+          <button
             className={`map-selector-btn ${mapType === 'street' ? 'active' : ''}`}
             onClick={() => onMapTypeChange('street')}
           >
-            🗺️ 일반지도
+            일반지도
           </button>
         </div>
       </div>
