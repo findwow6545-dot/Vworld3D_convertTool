@@ -100,41 +100,35 @@ export const generateObjFile = (data, center) => {
     });
   }
 
-  // 2. 도로 변환
+  // 2. 도로 변환 (Spline/Line 방식)
   if (roads.length > 0) {
     lines.push('\ng Roads');
     roads.forEach((feature) => {
       const geom = feature.geometry;
       if (!geom || !geom.coordinates) return;
-      const roadWidth = 6.0; // 6미터 폭
 
-      // LineString과 MultiLineString 모두 대응 가능하도록 배열화
       const lineGroup = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
 
       lineGroup.forEach((coords) => {
-        for (let i = 0; i < coords.length - 1; i++) {
-          const x1 = (coords[i][0] - originLng) * degToMeterLng;
-          const z1 = -(coords[i][1] - originLat) * degToMeterLat;
-          const x2 = (coords[i+1][0] - originLng) * degToMeterLng;
-          const z2 = -(coords[i+1][1] - originLat) * degToMeterLat;
+        if (coords.length < 2) return;
+        
+        const startVertex = vertexCount;
+        const h = 0.1; // 지면에서 10cm 높이 (Spline 시인성)
 
-          const dx = x2 - x1;
-          const dz = z2 - z1;
-          const len = Math.sqrt(dx*dx + dz*dz);
-          if (len < 0.1) continue;
+        // 모든 정점 생성
+        coords.forEach(([lng, lat]) => {
+          const x = (lng - originLng) * degToMeterLng;
+          const z = -(lat - originLat) * degToMeterLat;
+          lines.push(`v ${x.toFixed(4)} ${h} ${z.toFixed(4)}`);
+          vertexCount++;
+        });
 
-          const nx = (-dz / len) * (roadWidth / 2);
-          const nz = (dx / len) * (roadWidth / 2);
-
-          const h = 0.05; // 지면 위 5cm
-          lines.push(`v ${(x1 - nx).toFixed(4)} ${h} ${(z1 - nz).toFixed(4)}`);
-          lines.push(`v ${(x1 + nx).toFixed(4)} ${h} ${(z1 + nz).toFixed(4)}`);
-          lines.push(`v ${(x2 + nx).toFixed(4)} ${h} ${(z2 + nz).toFixed(4)}`);
-          lines.push(`v ${(x2 - nx).toFixed(4)} ${h} ${(z2 - nz).toFixed(4)}`);
-
-          lines.push(`f ${vertexCount} ${vertexCount+1} ${vertexCount+2} ${vertexCount+3}`);
-          vertexCount += 4;
+        // 연속 라인(l) 생성
+        const indices = [];
+        for (let i = 0; i < coords.length; i++) {
+          indices.push(startVertex + i);
         }
+        lines.push(`l ${indices.join(' ')}`);
       });
     });
   }
