@@ -88,9 +88,13 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
     if (!viewerRef.current || !coord) return;
     const viewer = viewerRef.current;
 
-    // 💡 두 번째 이미지와 같이 수집 영역이 화면 정중앙에 오도록 시점 보정 (고도 상향 및 각도 최적화)
+    // 💡 더블 클릭 지점이 화면 정중앙에 수평/수직적으로 완벽하게 위치하도록 오프셋 정밀 보정
     viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(coord.lng + 0.015, coord.lat - 0.035, 3000),
+      destination: Cesium.Cartesian3.fromDegrees(
+        coord.lng + 0.005, // 수평 중앙 정렬을 위해 경도 오프셋 축소
+        coord.lat - 0.025, // 수직 중앙 정렬을 위해 위도 오프셋 최적화
+        1800              // 피사체가 크게 보이도록 고도 하향 및 중앙 집중
+      ),
       orientation: { 
         heading: Cesium.Math.toRadians(340), 
         pitch: Cesium.Math.toRadians(-35),
@@ -152,7 +156,7 @@ export default function MapContainer({ coord, radius, features, onMapDoubleClick
           polygon: {
             hierarchy: Cesium.Cartesian3.fromDegreesArray(polygonCoords),
             extrudedHeight: height,
-            material: Cesium.Color.WHITE, // 투명도 제거 (완전 불투명)
+            material: Cesium.Color.fromCssColorString('#FFFFFF'), // 명시적 불투명 흰색 적용
             outline: true,
             outlineColor: Cesium.Color.BLACK.withAlpha(0.4),
           },
