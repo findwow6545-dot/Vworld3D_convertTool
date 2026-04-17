@@ -203,8 +203,9 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
         roll: viewer.camera.roll,
       };
 
-      // 3. 순수 위성지도 탑 뷰(Top-Down) 설정 (반경을 고려해 고도 확보)
-      const altitude = radius * 3000;
+      // 3. 순수 위성지도 탑 뷰(Top-Down) 설정
+      // 해상도 극대화를 위해 카메라를 가깝게 붙입니다. (화면에 영역이 완전히 들어오도록 여유 2200 적용)
+      const altitude = radius * 2200;
       viewer.camera.setView({
         destination: Cesium.Cartesian3.fromDegrees(coord.lng, coord.lat, altitude),
         orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
@@ -214,9 +215,50 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           try {
-            viewer.render();
-            // 최고 해상도로 캡처
-            const dataUrl = viewer.scene.canvas.toDataURL('image/jpeg', 1.0);
+            viewer.render(); // 강제 최신 프레임 렌더링
+
+            // 추출 반경 기반 BBOX (빨간 사각형 영역) 계산
+            const latDeg = radius / 111.32;
+            const lngDeg = radius / (111.32 * Math.cos(coord.lat * (Math.PI / 180)));
+            const west = coord.lng - lngDeg;
+            const south = coord.lat - latDeg;
+            const east = coord.lng + lngDeg;
+            const north = coord.lat + latDeg;
+
+            // 북서쪽(Top-Left)과 남동쪽(Bottom-Right) 월드 좌표
+            const nwCart = Cesium.Cartesian3.fromDegrees(west, north, 0);
+            const seCart = Cesium.Cartesian3.fromDegrees(east, south, 0);
+
+            // 월드 좌표를 현재 화면의 픽셀 좌표로 변환
+            const nwPixel = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, nwCart);
+            const sePixel = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, seCart);
+
+            if (!nwPixel || !sePixel) {
+               throw new Error("캡처 대상 영역이 화면을 벗어났습니다.");
+            }
+
+            // 고해상도 캡처를 위한 디바이스 픽셀 비율 적용 (망막 디스플레이 등)
+            const scale = window.devicePixelRatio || 1;
+            const px = Math.min(nwPixel.x, sePixel.x) * scale;
+            const py = Math.min(nwPixel.y, sePixel.y) * scale;
+            const pw = Math.abs(sePixel.x - nwPixel.x) * scale;
+            const ph = Math.abs(sePixel.y - nwPixel.y) * scale;
+
+            // 크롭 전용 캔버스 생성 (정확히 사각형 크기만큼)
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = pw;
+            cropCanvas.height = ph;
+            const ctx = cropCanvas.getContext('2d');
+
+            // 원본 지도의 특정 영역만 잘라서 대상 캔버스에 그리기
+            ctx.drawImage(
+              viewer.scene.canvas,
+              px, py, pw, ph,  // Source 영역 (x, y, w, h)
+              0, 0, pw, ph     // Destination 영역 범위
+            );
+
+            // 최종 JPG 이미지 생성 및 다운로드 (압축률 100%)
+            const dataUrl = cropCanvas.toDataURL('image/jpeg', 1.0);
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = filename;
@@ -225,7 +267,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
           } catch(e) {
             reject(e);
           } finally {
-            // 5. 모든 엔티티 및 카메라 복구
+            // 5. 모든 엔티티 및 카메라 원래대로 복구
             entities.forEach((e, i) => { e.show = visibilityStates[i]; });
             viewer.camera.setView({
               destination: cachedCamera.position,
@@ -236,7 +278,7 @@ const MapContainer = forwardRef(({ coord, radius, features, onMapDoubleClick }, 
               }
             });
           }
-        }, 1500); // 1.5초(타일 로딩 시간)
+        }, 1500); // 1.5초 대기
       });
     }
   }));
