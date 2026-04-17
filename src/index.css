@@ -240,3 +240,18 @@ body {
   display: flex;
   align-items: flex-start;
 }
+
+.address-text {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.address-placeholder {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  width: 100%;
+  font-weight: 500;
+}
